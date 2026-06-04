@@ -22,7 +22,7 @@ multi-line status line for Claude Code (the 3-line display above). `setup.sh` in
 it and writes this config for you. To do it by hand:
 
 ```bash
-npm install -g ccstatusline
+npm install -g ccstatusline@2
 mkdir -p ~/.config/ccstatusline
 cp ccstatusline-settings.json ~/.config/ccstatusline/settings.json
 ```

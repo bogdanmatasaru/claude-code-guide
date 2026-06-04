@@ -334,7 +334,8 @@ if [ -d "$SL_ASSETS" ]; then
   if command -v ccstatusline >/dev/null 2>&1; then
     ok "ccstatusline already installed"
   else
-    run "npm install -g ccstatusline" \
+    # @2 pins the major version so the shipped config (schema v3) keeps working
+    run "npm install -g ccstatusline@2" \
       || warn "ccstatusline not installed (needs npm) — the status line stays blank until it is"
   fi
   # its config, only if you don't already have one
