@@ -358,6 +358,24 @@ if [ -d "$SL_ASSETS" ]; then
     chmod +x "$HOME/.claude/statusline.sh"
     ok "wrote ~/.claude/statusline.sh (alternative)"
   fi
+  # Wire the status line into an EXISTING settings.json too — so re-running this
+  # script updates users who set up before the status line existed. Adds the key
+  # only if it's missing (your own statusLine, if any, is left untouched).
+  SETTINGS="$HOME/.claude/settings.json"
+  if [ -f "$SETTINGS" ] && command -v node >/dev/null 2>&1; then
+    if node -e 'process.exit(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).statusLine?0:1)' "$SETTINGS" 2>/dev/null; then
+      skip "settings.json already has a statusLine"
+    elif $DRY_RUN; then
+      skip "[dry-run] add statusLine to existing settings.json"
+    else
+      cp "$SETTINGS" "$SETTINGS.bak.$(date +%s)"
+      if node -e 'const f=process.argv[1],fs=require("fs");const s=JSON.parse(fs.readFileSync(f,"utf8"));s.statusLine={type:"command",command:"ccstatusline",padding:0};fs.writeFileSync(f,JSON.stringify(s,null,2)+"\n")' "$SETTINGS"; then
+        ok "added statusLine to your existing settings.json (backup made)"
+      else
+        warn "couldn't update settings.json — add a statusLine key manually"
+      fi
+    fi
+  fi
 else
   skip "status-line assets not found (run setup.sh from the repo) — skipping"
 fi

@@ -114,6 +114,18 @@ The script ships with a **test suite (32 checks)** that runs `setup.sh` in a tem
 
 See [`../../test/run-tests.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/test/run-tests.sh). It covers syntax and shellcheck, a full fresh-Mac run, config writes and valid JSON, PATH persistence, idempotency (a second run makes zero `.bak` files), `--check` on both healthy and broken environments, clean `--help` output, network-failure tolerance, and that `--dry-run` writes nothing.
 
+## Updating
+
+The script is also your **update command**. Re-run the one-liner anytime — it pulls the latest version of this repo and re-applies everything idempotently:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
+```
+
+Cloned it instead? `cd claude-code-guide && git pull && ./setup.sh`.
+
+Updating is safe because the script is idempotent: it skips what's already installed, backs up a file only when its contents change, and merges in new pieces — for example, it adds the `statusLine` to an existing `~/.claude/settings.json` if a newer version introduced one. Your own customizations (an existing `statusLine`, settings, or configs) are left untouched.
+
 ## Next steps
 
 - Tune your terminal further in [Terminal & Ghostty setup](./terminal-and-ghostty.md).
