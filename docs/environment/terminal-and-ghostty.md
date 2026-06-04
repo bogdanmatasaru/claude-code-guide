@@ -86,6 +86,22 @@ Copy any image to the clipboard, then press **Ctrl+V** in the Claude Code prompt
 | New split | **Cmd+D** |
 | Reload config | **Cmd+Shift+,** |
 
+## Edit long prompts in your editor
+
+Wrote a long, multi-line prompt and want to fix something in the middle? You can't click to reposition the cursor in a terminal prompt — but you don't have to arrow-key back like a robot either. Press **Ctrl+G** in the Claude Code prompt and the current text opens in your `$EDITOR`, with full mouse support, undo, and multi-line editing. Save and close the file, and the edited prompt returns to Claude.
+
+Set your editor once in `~/.zshrc`. The **`--wait` / `-w`** flag is essential — it makes the editor block until you close the file, so Claude waits for you instead of thinking you're done immediately:
+
+```bash
+export EDITOR="subl --wait"   # Sublime Text
+# export EDITOR="code -w"     # VS Code
+# export EDITOR="vim"         # vim (already blocks)
+# export EDITOR="nano"        # nano
+```
+
+> [!TIP]
+> If `subl` (or `code`) isn't on your `PATH`, symlink its CLI into a directory that is — e.g. `ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ~/.local/bin/subl`. Then open a new terminal (or `source ~/.zshrc`) and restart `claude` so it picks up `$EDITOR`.
+
 ## Next steps
 
 - Run the [one-command setup](./bootstrap-setup.md) to install Ghostty and everything else in one go.
