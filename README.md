@@ -1,79 +1,82 @@
-# Claude Code — Ghid complet
+<div align="center">
 
-Ghid de referință (în română) pentru **Claude Code** în terminal: comenzi, taste, moduri de permisiuni, memorie & `CLAUDE.md`, hooks, optimizare cost/limite, status line cu monitorizare rate-limit (5h + săptămânal), și top tools de productivitate cu star-count verificat.
+<img src="media/logo.svg" alt="Claude Code Guide" width="120" />
 
-## Setup pe un calculator nou (1 comandă)
+# Claude Code Guide
 
-Pe un Mac nou, fără nimic instalat:
+**The complete, always-current guide to [Claude Code](https://code.claude.com/docs) — from your first session to expert workflows.**
 
-```bash
-git clone https://github.com/bogdanmatasaru/claude-code-guide.git
-cd claude-code-guide
-./setup.sh
-```
+Every command, flag, hook, MCP, subagent, and best practice — plus a one-command terminal + Ghostty setup. Beginner-friendly, accurate, and cited.
 
-> Ghid de onboarding pas-cu-pas (beginner-friendly): **[`SETUP.md`](SETUP.md)**.
+[![Stars](https://img.shields.io/github/stars/bogdanmatasaru/claude-code-guide?style=flat&logo=github&color=8b5cf6)](https://github.com/bogdanmatasaru/claude-code-guide/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/bogdanmatasaru/claude-code-guide?color=8b5cf6)](https://github.com/bogdanmatasaru/claude-code-guide/commits/main)
+[![Docs site](https://img.shields.io/badge/docs-online-8b5cf6)](https://bogdanmatasaru.github.io/claude-code-guide/)
+[![CI](https://github.com/bogdanmatasaru/claude-code-guide/actions/workflows/ci.yml/badge.svg)](https://github.com/bogdanmatasaru/claude-code-guide/actions/workflows/ci.yml)
 
-Scriptul e **idempotent** (re-rulabil) și instalează în ordine: Xcode CLT → Homebrew →
-**Ghostty** → JetBrains Mono → Node.js → gh → **Claude Code** → scrie config Ghostty
-(`~/.config/ghostty/config`) + config Claude (`~/.claude/`) + persistă PATH în `~/.zshrc`.
-La final rulează auto o **validare**.
+[**📖 Read the guide →**](https://bogdanmatasaru.github.io/claude-code-guide/) · [**🧭 Learning path**](docs/learning-path.md) · [**⚡ Cheatsheet**](docs/cheatsheet.md)
 
-Flag-uri:
+<img src="media/demo.gif" alt="setup.sh bootstrapping a fresh Mac" width="720" />
 
-| Flag | Efect |
-|---|---|
-| (niciunul) | Instalare completă, interactiv |
-| `--dry-run` | Arată ce ar face, fără să schimbe nimic |
-| `--check` | Doar validează un mediu existent (nu instalează) |
-| `--no-shell` | Nu adăuga alias-uri / linii PATH în shell rc |
-
-După rulare: deschizi Ghostty → `claude` → login. Apoi, în orice proiect, skill-ul
-**`/project-onboard`** (`.claude/skills/`) configurează `CLAUDE.md` + permisiuni.
-
-### Validare / teste
-
-`setup.sh` are o suită de teste care simulează un Mac nou (HOME izolat + comenzi mock),
-fără să atingă sistemul tău. Rulează:
-
-```bash
-./test/run-tests.sh
-```
-
-Verifică: sintaxă, `shellcheck`, scrierea config-urilor, JSON valid, persistarea PATH,
-idempotența (rulare ×2 fără backup-uri), toleranța la eșec de rețea la `brew install`,
-`--help` curat și modurile `--dry-run` / `--check`. **32 de aserții** (31 fără
-`shellcheck` instalat), toate trec.
-
-## Conținut
-
-| Fișier | Descriere |
-|---|---|
-| [`SETUP.md`](SETUP.md) | **Onboarding** pas-cu-pas pentru calculator nou (start aici) |
-| [`setup.sh`](setup.sh) | **Bootstrap** mediu pe calculator nou (Ghostty + Claude Code + config) |
-| [`test/run-tests.sh`](test/run-tests.sh) | Suită de teste izolată pentru `setup.sh` (mock, fără efecte reale) |
-| [`.claude/skills/project-onboard`](.claude/skills/project-onboard/SKILL.md) | Skill: configurează un proiect (CLAUDE.md, permisiuni, MCP) |
-| [`claude-code-ghid.html`](claude-code-ghid.html) | Sursa — ghidul complet, formatat (deschide în browser) |
-| [`claude-code-ghid.pdf`](claude-code-ghid.pdf) | Versiunea PDF (12 pagini, generată din HTML) |
-
-## Structură (26 secțiuni, 6 părți)
-
-- **I · Zilnic** — esențialul, prefixe (`/ @ ! #`), taste, moduri de permisiuni, sesiune & context
-- **II · Lucrul cu codul** — când începi o sesiune, top use cases, git & calitate, prompting, greșeli de evitat
-- **III · Control** — model/efort/thinking, optimizare cost & limite
-- **IV · Personalizare** — memorie & `CLAUDE.md`, config, `settings.json`, hooks
-- **V · Avansat dar util** — lucru în paralel, funcții avansate, CLI, top tools, **monitorizare consum & productivitate**
-- **VI · Mediu & referință** — terminale, setup Ghostty, depanare, glosar, flux de lucru
-
-## Regenerare PDF din HTML
-
-```bash
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --headless --disable-gpu --no-pdf-header-footer \
-  --print-to-pdf="claude-code-ghid.pdf" \
-  "file://$(pwd)/claude-code-ghid.html"
-```
+</div>
 
 ---
 
-*Stars verificate prin GitHub API (iun. 2026). Sursă de informație personală — actualizat pe măsură ce ecosistemul evoluează.*
+## 30-second start
+
+On a fresh Mac, go from zero to a fully-configured Claude Code + Ghostty in **one command**:
+
+```bash
+git clone https://github.com/bogdanmatasaru/claude-code-guide.git
+cd claude-code-guide && ./setup.sh
+```
+
+Then open Ghostty, type `claude`, and log in. That's it. → [Full setup guide](docs/environment/bootstrap-setup.md)
+
+Already set up? Jump straight to the [**Cheatsheet**](docs/cheatsheet.md) or pick your [**Learning path**](docs/learning-path.md).
+
+## Why this exists
+
+The official docs are excellent reference material — but they don't hold your hand on day one, and they don't show you the *workflows*. This guide is the missing layer:
+
+- **Structured for every level** — tutorials to learn, how-to guides to get the job done, and a deep reference to look anything up ([Diátaxis](https://diataxis.fr/)).
+- **Simple → complex** — a first-timer and a power user both find their level.
+- **Accurate & cited** — facts checked against the [official docs](https://code.claude.com/docs) and version-stamped.
+- **Copy-paste assets** — drop-in `CLAUDE.md` templates, slash commands, hooks, and settings.
+- **A unique wedge** — the only guide with a reproducible one-command environment + cost/rate-limit monitoring.
+
+## What's inside
+
+| Section | For |
+|---|---|
+| 🚀 [Getting started](docs/getting-started/quickstart.md) | Install → first win → first real session |
+| 🛠️ [Guides](docs/guides/onboard-a-codebase.md) | Task recipes: onboard a codebase, fix a bug, refactor, parallel work, CI |
+| 📚 [Reference](docs/reference/cli.md) | One page per feature: CLI, hooks, MCP, skills, subagents, settings, models… |
+| 🧠 [Explanation](docs/explanation/how-claude-works.md) | Mental models: how it works, the context window, when to use what |
+| 💻 [Environment](docs/environment/bootstrap-setup.md) | Terminal & Ghostty, the `setup.sh` bootstrap, cost monitoring |
+| ⭐ [Best practices](docs/best-practices.md) | Curated, attributed tips — official vs community |
+| 🧩 [Asset library](assets/) | `CLAUDE.md` templates · commands · hooks · settings · skills |
+
+## Quick links
+
+- **New to Claude Code?** → [Quickstart (5 min)](docs/getting-started/quickstart.md)
+- **Want a map?** → [Learning path](docs/learning-path.md) (diagnostic → personalized track)
+- **Need a fact fast?** → [Cheatsheet](docs/cheatsheet.md) (one page, Cmd-F friendly)
+- **Optimizing?** → [Cost & context](docs/guides/cost-optimization.md) · [Subagents](docs/reference/subagents.md) · [Hooks](docs/reference/hooks.md)
+
+## Contributing
+
+This guide stays valuable only if it stays accurate and current — and that's a team sport. Corrections, new recipes, and assets are all welcome, no matter how small. See [CONTRIBUTING.md](CONTRIBUTING.md) and look for `good first issue`.
+
+## Star history
+
+<a href="https://star-history.com/#bogdanmatasaru/claude-code-guide&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=bogdanmatasaru/claude-code-guide&type=Date&theme=dark" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=bogdanmatasaru/claude-code-guide&type=Date" width="600" />
+  </picture>
+</a>
+
+## License & disclaimer
+
+[MIT](LICENSE) © Bogdan Matasaru. A community guide — **not affiliated with Anthropic**. "Claude" and "Claude Code" are trademarks of Anthropic. Facts are cited against the official docs; when in doubt, [code.claude.com/docs](https://code.claude.com/docs) is the source of truth.
