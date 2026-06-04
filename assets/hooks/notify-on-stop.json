@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "msg=$(jq -r '.message // \"Claude Code needs your attention.\"'); osascript -e \"display notification \\\"$msg\\\" with title \\\"Claude Code\\\" sound name \\\"Glass\\\"\""
+            "command": "msg=$(jq -r '.message // \"Claude Code needs your attention.\"' | tr -d '\"\\\\'); osascript -e \"display notification \\\"$msg\\\" with title \\\"Claude Code\\\" sound name \\\"Glass\\\"\""
           }
         ]
       }
