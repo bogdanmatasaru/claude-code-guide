@@ -1,0 +1,27 @@
+/* Brand color — match the logo and the diagrams (purple). */
+:root {
+  --vp-c-brand-1: #7c3aed;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #8b5cf6;
+  --vp-c-brand-soft: rgba(139, 92, 246, 0.16);
+  --vp-home-hero-name-color: #8b5cf6;
+}
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #8b5cf6;
+  --vp-c-brand-soft: rgba(139, 92, 246, 0.2);
+}
+
+/* Hide the noisy "text" language label on prompt / plain code blocks.
+   Real languages (bash, json, ts, …) keep their useful labels. */
+.vp-doc [class~='language-text'] > span.lang {
+  display: none;
+}
+
+/* Center standalone diagram images and give them a little breathing room. */
+.vp-doc p > img:only-child {
+  display: block;
+  margin: 1.75rem auto;
+  max-width: 100%;
+}

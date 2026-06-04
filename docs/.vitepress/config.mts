@@ -1,8 +1,8 @@
-import { withMermaid } from 'vitepress-plugin-mermaid'
+import { defineConfig } from 'vitepress'
 
 // Single source of truth: VitePress renders the same Markdown files in docs/ that
 // GitHub renders. base must match the GitHub Pages project path.
-export default withMermaid({
+export default defineConfig({
   title: 'Claude Code Guide',
   description:
     'The complete Claude Code guide, cheatsheet & best practices — commands, hooks, MCP, subagents, skills, and a one-command terminal + Ghostty setup.',

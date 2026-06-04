@@ -17,18 +17,7 @@ a rough time so you can budget your learning.
 - **"I've used it a bit but wing it."** → [Track 2: Get fluent](#track-2-get-fluent)
 - **"I use it daily and want to go faster / cheaper."** → [Track 3: Optimize](#track-3-optimize-like-a-pro)
 
-```mermaid
-flowchart TD
-    A([Start]) --> Q{How much have<br/>you used Claude Code?}
-    Q -->|Never| T1[Track 1: First steps<br/>~30 min]
-    Q -->|A little| T2[Track 2: Get fluent<br/>~1 hour]
-    Q -->|Daily| T3[Track 3: Optimize<br/>~1 hour]
-    T1 --> T2 --> T3
-    T3 --> Done([You're an<br/>advanced user])
-
-    classDef track fill:#8b5cf6,stroke:#6d28d9,color:#fff;
-    class T1,T2,T3 track;
-```
+![Choose your path: from Start, based on how much you have used Claude Code, go to Track 1, Track 2, or Track 3.](./img/learning-tracks.svg)
 
 ---
 

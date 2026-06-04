@@ -92,16 +92,7 @@ Details → [models & effort](./reference/models-and-effort.md) · [cost](./guid
 
 ## The core loop
 
-```mermaid
-flowchart LR
-    E[Explore<br/>read, ask] --> P[Plan<br/>Shift+Tab]
-    P --> C[Code<br/>implement]
-    C --> V{Verify<br/>tests/build}
-    V -->|fails| C
-    V -->|passes| Commit[Commit]
-    classDef step fill:#8b5cf6,stroke:#6d28d9,color:#fff;
-    class E,P,C,Commit step;
-```
+![The core loop: Explore to Plan to Code to Verify; if it fails, back to Code; if it passes, Commit.](./img/core-loop.svg)
 
 > [!TIP]
 > Give Claude a check it can run — tests, a build, a screenshot. That's the difference between a session you watch and one you walk away from.

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 170" width="860" height="170" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="The core loop: Explore, Plan, Code, Verify; if Verify fails go back to Code, if it passes Commit.">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#9aa0ad"/>
+    </marker>
+    <style>
+      .box { fill:#8b5cf6; stroke:#7c3aed; stroke-width:1.5; }
+      .lbl { fill:#ffffff; font-size:16px; font-weight:600; }
+      .edge { stroke:#9aa0ad; stroke-width:2; fill:none; }
+      .elbl { fill:#9aa0ad; font-size:13px; }
+    </style>
+  </defs>
+
+  <!-- edges -->
+  <line class="edge" x1="130" y1="97" x2="171" y2="97" marker-end="url(#arrow)"/>
+  <line class="edge" x1="295" y1="97" x2="336" y2="97" marker-end="url(#arrow)"/>
+  <line class="edge" x1="460" y1="97" x2="503" y2="97" marker-end="url(#arrow)"/>
+  <line class="edge" x1="614" y1="97" x2="696" y2="97" marker-end="url(#arrow)"/>
+  <text class="elbl" x="655" y="88" text-anchor="middle">passes</text>
+  <!-- fail loop: Verify top -> Code top -->
+  <path class="edge" d="M 556 57 C 535 18 425 18 402 68" marker-end="url(#arrow)"/>
+  <text class="elbl" x="479" y="26" text-anchor="middle">fails</text>
+
+  <!-- nodes -->
+  <rect class="box" x="10"  y="70" width="120" height="54" rx="11"/>
+  <text class="lbl" x="70"  y="102" text-anchor="middle">Explore</text>
+  <rect class="box" x="175" y="70" width="120" height="54" rx="11"/>
+  <text class="lbl" x="235" y="102" text-anchor="middle">Plan</text>
+  <rect class="box" x="340" y="70" width="120" height="54" rx="11"/>
+  <text class="lbl" x="400" y="102" text-anchor="middle">Code</text>
+  <polygon class="box" points="560,55 614,97 560,139 506,97"/>
+  <text class="lbl" x="560" y="102" text-anchor="middle">Verify</text>
+  <rect class="box" x="700" y="70" width="120" height="54" rx="11"/>
+  <text class="lbl" x="760" y="102" text-anchor="middle">Commit</text>
+</svg>

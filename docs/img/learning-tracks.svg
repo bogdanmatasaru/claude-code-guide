@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Choose your path: from Start, based on how much you've used Claude Code, go to Track 1 (Never), Track 2 (A little), or Track 3 (Daily).">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#9aa0ad"/>
+    </marker>
+    <style>
+      .box { fill:#8b5cf6; stroke:#7c3aed; stroke-width:1.5; }
+      .lbl { fill:#ffffff; font-weight:600; }
+      .edge { stroke:#9aa0ad; stroke-width:2; fill:none; }
+      .elbl { fill:#9aa0ad; font-size:13px; }
+    </style>
+  </defs>
+
+  <!-- edges -->
+  <line class="edge" x1="360" y1="54" x2="360" y2="80" marker-end="url(#ar)"/>
+  <path class="edge" d="M 224 122 C 170 160 138 188 116 218" marker-end="url(#ar)"/>
+  <line class="edge" x1="360" y1="160" x2="360" y2="216" marker-end="url(#ar)"/>
+  <path class="edge" d="M 496 122 C 550 160 582 188 604 218" marker-end="url(#ar)"/>
+  <text class="elbl" x="150" y="180" text-anchor="middle">Never</text>
+  <text class="elbl" x="378" y="196">A little</text>
+  <text class="elbl" x="566" y="180" text-anchor="middle">Daily</text>
+
+  <!-- Start -->
+  <rect class="box" x="300" y="18" width="120" height="36" rx="18"/>
+  <text class="lbl" x="360" y="41" text-anchor="middle" font-size="15">Start</text>
+
+  <!-- Decision diamond -->
+  <polygon class="box" points="360,82 500,121 360,160 220,121"/>
+  <text class="lbl" x="360" y="116" text-anchor="middle" font-size="14">How much have you</text>
+  <text class="lbl" x="360" y="134" text-anchor="middle" font-size="14">used Claude Code?</text>
+
+  <!-- Tracks -->
+  <rect class="box" x="26"  y="220" width="180" height="56" rx="11"/>
+  <text class="lbl" x="116" y="244" text-anchor="middle" font-size="14">Track 1: First steps</text>
+  <text class="lbl" x="116" y="263" text-anchor="middle" font-size="12" fill="#ede9fe">~30 min</text>
+
+  <rect class="box" x="270" y="220" width="180" height="56" rx="11"/>
+  <text class="lbl" x="360" y="244" text-anchor="middle" font-size="14">Track 2: Get fluent</text>
+  <text class="lbl" x="360" y="263" text-anchor="middle" font-size="12" fill="#ede9fe">~1 hour</text>
+
+  <rect class="box" x="514" y="220" width="180" height="56" rx="11"/>
+  <text class="lbl" x="604" y="244" text-anchor="middle" font-size="14">Track 3: Optimize</text>
+  <text class="lbl" x="604" y="263" text-anchor="middle" font-size="12" fill="#ede9fe">~1 hour</text>
+</svg>
