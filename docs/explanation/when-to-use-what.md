@@ -15,7 +15,7 @@ Rule of thumb: if you can't say exactly what the change is in one breath, plan i
 
 ## Subagent vs. inline
 
-- **Subagent** when a task reads **many files** or you want to protect your main context. The subagent investigates in its own context window and returns a summary. See [../reference/](../reference/).
+- **Subagent** when a task reads **many files** or you want to protect your main context. The subagent investigates in its own context window and returns a summary. See [Subagents](../reference/subagents.md).
 - **Inline** (just ask in the main session) for focused work where you want to see and steer every step.
 
 ## Skill vs. command vs. hook vs. MCP
@@ -34,7 +34,7 @@ These look similar but solve different problems:
 - **Use a hook when** the action is non-negotiable: format on every edit, block commits to `main`, log every tool call.
 - **Use MCP when** Claude needs to reach a system it can't touch with files and shell — but keep your MCP set **lean**, since each server adds context and surface area.
 
-See the reference pages for each: [../reference/](../reference/).
+See the reference pages for each: [Skills](../reference/skills.md), [Hooks](../reference/hooks.md), [MCP](../reference/mcp.md).
 
 ## Model selection by task
 

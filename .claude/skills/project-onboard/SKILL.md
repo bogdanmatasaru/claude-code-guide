@@ -13,12 +13,14 @@ Run the steps in order. Be concise with the user; show what you did, don't expla
 the theory.
 
 ## 1. Understand the repo
+
 - Detect the stack: look for `package.json`, `pyproject.toml`, `go.mod`,
   `Cargo.toml`, `Makefile`, `*.csproj`, etc.
 - Identify the build / test / lint / run commands (from scripts, Makefile, CI).
 - Note obvious conventions (formatter, folder structure, test framework).
 
 ## 2. CLAUDE.md
+
 - If `CLAUDE.md` does **not** exist: run the equivalent of `/init` — generate a
   short one with: the key commands (build/test/lint/run), a brief structure
   overview, code conventions, and non-obvious things to know. Keep it tight (not
@@ -27,6 +29,7 @@ the theory.
 - Ask for confirmation before writing/committing.
 
 ## 3. Permissions (fewer prompts)
+
 - From the commands found in step 1, propose an allowlist in `.claude/settings.json`
   for the safe & repetitive ones (e.g. `Bash(npm run test:*)`, `Bash(npm run build)`,
   `Bash(git status)`, `Bash(git diff:*)`).
@@ -34,6 +37,7 @@ the theory.
 - Write to `.claude/settings.json` (project), not the global settings.
 
 ## 4. Relevant MCP servers (optional)
+
 - If the project uses GitHub and `gh` is authenticated, suggest the GitHub MCP.
 - If it's a web/UI project, mention a browser MCP for visual verification.
 - Only suggest + show the command; don't install without an OK.

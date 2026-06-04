@@ -4,7 +4,7 @@ description: Bootstrap a complete Claude Code + Ghostty environment on a fresh M
 ---
 # One-command setup (setup.sh)
 
-[`../../setup.sh`](../../setup.sh) takes a clean Mac to a working Claude Code environment in one command — terminal, runtime, CLI, fonts, and configs — and it's safe to re-run.
+[`../../setup.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/setup.sh) takes a clean Mac to a working Claude Code environment in one command — terminal, runtime, CLI, fonts, and configs — and it's safe to re-run.
 
 ## What it does
 
@@ -85,7 +85,7 @@ The script ships with a **32-assertion** test suite that runs `setup.sh` in a te
 ./test/run-tests.sh
 ```
 
-See [`../../test/run-tests.sh`](../../test/run-tests.sh). It covers syntax and shellcheck, a full fresh-Mac run, config writes and valid JSON, PATH persistence, idempotency (a second run makes zero `.bak` files), `--check` on both healthy and broken environments, clean `--help` output, network-failure tolerance, and that `--dry-run` writes nothing.
+See [`../../test/run-tests.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/test/run-tests.sh). It covers syntax and shellcheck, a full fresh-Mac run, config writes and valid JSON, PATH persistence, idempotency (a second run makes zero `.bak` files), `--check` on both healthy and broken environments, clean `--help` output, network-failure tolerance, and that `--dry-run` writes nothing.
 
 ## Next steps
 

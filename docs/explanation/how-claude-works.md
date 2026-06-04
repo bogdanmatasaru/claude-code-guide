@@ -39,10 +39,10 @@ Everything Claude knows in a session lives in its **context window** — its wor
 
 Four mechanisms let you shape how Claude behaves, each for a different need:
 
-- **CLAUDE.md** — durable project facts (stack, conventions, commands) that load automatically every session. Your project's memory. See [../reference/](../reference/).
-- **Skills** — reusable capabilities that load **when relevant** to the task at hand. Good for "sometimes you need this" know-how. See [../reference/](../reference/).
-- **Subagents** — isolated helpers that investigate in their **own context window** and report back a summary, protecting your main context from clutter. Ideal for tasks that read many files. See [../reference/](../reference/).
-- **Hooks** — shell commands that run **automatically** on specific events (before an edit, after a tool runs). Use these when something must happen *every time*, deterministically. See [../reference/](../reference/).
+- **CLAUDE.md** — durable project facts (stack, conventions, commands) that load automatically every session. Your project's memory. See [CLAUDE.md & memory](../reference/claude-md.md).
+- **Skills** — reusable capabilities that load **when relevant** to the task at hand. Good for "sometimes you need this" know-how. See [Skills](../reference/skills.md).
+- **Subagents** — isolated helpers that investigate in their **own context window** and report back a summary, protecting your main context from clutter. Ideal for tasks that read many files. See [Subagents](../reference/subagents.md).
+- **Hooks** — shell commands that run **automatically** on specific events (before an edit, after a tool runs). Use these when something must happen *every time*, deterministically. See [Hooks](../reference/hooks.md).
 
 A simple way to remember the difference: CLAUDE.md is *always* loaded, a skill is loaded *when relevant*, a subagent runs in *isolation*, and a hook runs *every time* — guaranteed.
 

@@ -28,6 +28,7 @@ the user explicitly asks you to apply a fix.
 ## Output format
 
 Group findings by severity: **Blocking**, **Should fix**, **Nit**. For each:
+
 - File + line reference.
 - One sentence on *why* it's a problem.
 - A concrete suggested fix (a code snippet or precise instruction).

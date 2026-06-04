@@ -117,7 +117,7 @@ Wire it to `PreToolUse`:
 Because `PreToolUse` can block, exiting `2` cancels the edit and tells Claude why.
 
 > [!TIP]
-> Hooks are configured in [settings.json](./settings.md), so they follow the same scope precedence. Ready-made hook scripts live in [`assets/hooks/`](../../assets/hooks/).
+> Hooks are configured in [settings.json](./settings.md), so they follow the same scope precedence. Ready-made hook scripts live in [`assets/hooks/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/hooks).
 
 > [!WARNING]
 > Hooks run with your shell's privileges. Review any hook before adding it, especially from untrusted sources.

@@ -80,6 +80,6 @@ Set `disable-model-invocation: true` for **manual-only** skills. Use it for side
 
 Claude Code ships several: `/code-review`, `/debug`, `/loop`, `/run`, `/verify`.
 
-See ready-to-copy examples under [`assets/skills/`](../../assets/skills/) and the workflow [guides](../guides/).
+See ready-to-copy examples under [`assets/skills/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/skills) and the workflow [guides](../guides/onboard-a-codebase.md).
 
 **Source:** [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)

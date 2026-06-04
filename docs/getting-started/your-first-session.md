@@ -35,7 +35,7 @@ Run this once per project:
 /init
 ```
 
-`/init` scans the repo and generates a **CLAUDE.md** file — durable notes about your stack, conventions, and commands that Claude reads automatically every session. Edit it over time to record anything you find yourself repeating. See [../reference/](../reference/) for the full CLAUDE.md reference.
+`/init` scans the repo and generates a **CLAUDE.md** file — durable notes about your stack, conventions, and commands that Claude reads automatically every session. Edit it over time to record anything you find yourself repeating. See [CLAUDE.md & memory](../reference/claude-md.md) for the full reference.
 
 ## The core loop: explore → plan → code → commit
 
@@ -72,7 +72,7 @@ Run it between unrelated tasks. A lean context keeps Claude sharp; a cluttered o
 
 ## Where to go next
 
-- Task-focused walkthroughs: [../guides/](../guides/)
-- Commands, flags, and config: [../reference/](../reference/)
+- Task-focused walkthroughs: [Guides](../guides/onboard-a-codebase.md)
+- Commands, flags, and config: [Reference](../reference/cli.md)
 
 **Source:** https://code.claude.com/docs/en/quickstart
