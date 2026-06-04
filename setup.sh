@@ -230,6 +230,9 @@ brew_formula node "Node.js"
 step "GitHub CLI (gh) — for PRs / the GitHub MCP"
 brew_formula gh "gh"
 
+step "jq — used by hooks and the status line"
+brew_formula jq "jq"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. Claude Code (official native installer, npm fallback) + persist PATH
 # ─────────────────────────────────────────────────────────────────────────────
@@ -286,6 +289,7 @@ read -r -d '' CLAUDE_SETTINGS <<'EOF' || true
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "includeCoAuthoredBy": true,
+  "statusLine": { "type": "command", "command": "ccstatusline", "padding": 0 },
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -320,7 +324,46 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. Shell aliases (optional)
+# 7. Status line — model, context, 5h/weekly limits, branch, session, disk
+# ─────────────────────────────────────────────────────────────────────────────
+step "Status line (cost / rate-limits / branch)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SL_ASSETS="$SCRIPT_DIR/assets/statusline"
+if [ -d "$SL_ASSETS" ]; then
+  # ccstatusline (the rich multi-line display the settings.json points to)
+  if command -v ccstatusline >/dev/null 2>&1; then
+    ok "ccstatusline already installed"
+  else
+    run "npm install -g ccstatusline" \
+      || warn "ccstatusline not installed (needs npm) — the status line stays blank until it is"
+  fi
+  # its config, only if you don't already have one
+  if [ -f "$HOME/.config/ccstatusline/settings.json" ]; then
+    skip "ccstatusline config exists — not overwriting"
+  elif $DRY_RUN; then
+    skip "[dry-run] write ~/.config/ccstatusline/settings.json"
+  else
+    mkdir -p "$HOME/.config/ccstatusline"
+    cp "$SL_ASSETS/ccstatusline-settings.json" "$HOME/.config/ccstatusline/settings.json"
+    ok "wrote ~/.config/ccstatusline/settings.json"
+  fi
+  # also drop the no-Node alternative (handy if you'd rather not use ccstatusline)
+  if [ -f "$HOME/.claude/statusline.sh" ]; then
+    # shellcheck disable=SC2088  # tilde is displayed text, not a path to expand
+    skip "~/.claude/statusline.sh exists — not overwriting"
+  elif $DRY_RUN; then
+    skip "[dry-run] write ~/.claude/statusline.sh"
+  else
+    cp "$SL_ASSETS/statusline.sh" "$HOME/.claude/statusline.sh"
+    chmod +x "$HOME/.claude/statusline.sh"
+    ok "wrote ~/.claude/statusline.sh (alternative)"
+  fi
+else
+  skip "status-line assets not found (run setup.sh from the repo) — skipping"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Shell aliases (optional)
 # ─────────────────────────────────────────────────────────────────────────────
 if $ADD_SHELL_ALIASES; then
   step "zsh aliases (~/.zshrc)"

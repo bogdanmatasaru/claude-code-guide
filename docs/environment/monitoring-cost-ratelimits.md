@@ -30,10 +30,18 @@ Run `/context` to see how full the current conversation's **context window** is.
 
 ## A live status line
 
-You can surface rate-limit and context info **continuously** with a status line, configured via `statusLine` in `~/.claude/settings.json`. Instead of running `/usage` repeatedly, you get a live readout at the bottom of the prompt.
+Instead of running `/usage` repeatedly, keep a **status line** pinned to the bottom of the prompt that always shows your model, context usage, your 5-hour and weekly limits (with bars and time-to-reset), the git branch, session time, and free disk:
+
+```text
+🤖 Opus 4.8   🧠 [███░░░░] 48%
+🟢 5h [███░░░░] 32% ⟳ 3h 3m    📅 7d [███░░░░] 31% ⟳ 4d 10h
+🌿 main +19 -8   ⏱ 4h 27m   💾 19.9G/48.0G
+```
+
+The [one-command setup](./bootstrap-setup.md) installs this for you — via [ccstatusline](https://github.com/sirmalloc/ccstatusline) — and wires it into `~/.claude/settings.json`. To set it up by hand, or to use the no-Node `statusline.sh` alternative (just bash + jq + git), see the [status-line assets](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/statusline).
 
 > [!TIP]
-> A status line that shows remaining context and time-to-reset is the cheapest insurance against an unexpected limit mid-task.
+> A status line that shows remaining context and time-to-reset is the cheapest insurance against an unexpected limit mid-task. It's the whole point of this guide's setup — you never have to wonder how much plan you've got left.
 
 ## What to do when you hit a limit
 

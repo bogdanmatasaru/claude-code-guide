@@ -10,6 +10,7 @@ safe by default — no destructive actions are ever auto-approved.
 | [`hooks/`](hooks/) | Hook snippets (format-on-edit, protect-paths, notify-on-stop) | your `settings.json` `hooks` block |
 | [`settings/`](settings/) | `settings.json` examples (minimal, team) | `~/.claude/settings.json` or `.claude/settings.json` |
 | [`skills/`](skills/) | Full shareable skills (e.g. project-onboard) | `~/.claude/skills/<name>/` |
+| [`statusline/`](statusline/) | A cost / rate-limit / branch status line | `~/.claude` + `~/.config/ccstatusline/` |
 
 Each folder has its own `README.md` with install instructions.
 

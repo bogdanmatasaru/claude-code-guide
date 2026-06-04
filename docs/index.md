@@ -67,6 +67,7 @@ It runs an idempotent, re-runnable bootstrap that installs and configures everyt
 | 4 | **Node.js** + GitHub CLI |
 | 5 | **Claude Code** — the `claude` CLI |
 | 6 | **Configs** — Ghostty theme, `~/.claude` settings, shell PATH & aliases |
+| 7 | **Live status line** — model · context · 5h/weekly limits · branch · session · disk |
 
 > [!TIP]
 > Want to preview it first, changing nothing? Add `--dry-run`:

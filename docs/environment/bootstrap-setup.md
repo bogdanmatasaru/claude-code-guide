@@ -16,11 +16,13 @@ The script runs everything from zero, in order:
 4. **JetBrains Mono** — `brew install --cask font-jetbrains-mono`.
 5. **Node.js** — the runtime for Claude Code and many projects.
 6. **GitHub CLI (`gh`)** — for pull requests and the GitHub MCP.
-7. **Claude Code** — via the official native installer (`curl -fsSL https://claude.ai/install.sh | bash`), with an npm fallback. Persists `~/.local/bin` on your PATH.
-8. **Ghostty config** — writes `~/.config/ghostty/config` (Catppuccin auto dark/light, JetBrains Mono).
-9. **Global Claude config** — writes `~/.claude/settings.json` and `~/.claude/CLAUDE.md`, but only if they don't already exist.
-10. **Shell aliases** — adds `cc`, `ccc`, `ccp` to `~/.zshrc`.
-11. **Validation** — runs `validate()` to report what's in place and what's missing.
+7. **jq** — used by the example hooks and the status line.
+8. **Claude Code** — via the official native installer (`curl -fsSL https://claude.ai/install.sh | bash`), with an npm fallback. Persists `~/.local/bin` on your PATH.
+9. **Ghostty config** — writes `~/.config/ghostty/config` (Catppuccin auto dark/light, JetBrains Mono).
+10. **Global Claude config** — writes `~/.claude/settings.json` and `~/.claude/CLAUDE.md`, but only if they don't already exist.
+11. **Status line** — installs [ccstatusline](https://github.com/sirmalloc/ccstatusline) and writes its config (model · context · 5h/weekly limits · branch · session · disk), plus a no-Node `statusline.sh` alternative. The settings.json points at it.
+12. **Shell aliases** — adds `cc`, `ccc`, `ccp` to `~/.zshrc`.
+13. **Validation** — runs `validate()` to report what's in place and what's missing.
 
 ## Flags
 
@@ -76,8 +78,10 @@ Then:
 | Path | Contents |
 | --- | --- |
 | `~/.config/ghostty/config` | Ghostty theme, font, padding, cursor settings. |
-| `~/.claude/settings.json` | Global settings with a small safe permission allowlist (only if absent). |
+| `~/.claude/settings.json` | Global settings: permission allowlist + the `statusLine` (only if absent). |
 | `~/.claude/CLAUDE.md` | Global preferences (only if absent). |
+| `~/.config/ccstatusline/settings.json` | Status-line layout (only if absent). |
+| `~/.claude/statusline.sh` | No-Node status-line alternative (only if absent). |
 | `~/.zshrc` | `brew shellenv`, `~/.local/bin` on PATH, and the `cc` / `ccc` / `ccp` aliases. |
 
 The aliases: `cc` = `claude`, `ccc` = `claude --continue` (resume the last session), `ccp` = `claude --permission-mode plan`.
