@@ -24,14 +24,30 @@ Every command, flag, hook, MCP, subagent, and best practice — plus a one-comma
 
 ## 30-second start
 
-On a fresh Mac, go from zero to a fully-configured Claude Code + Ghostty in **one command**:
+On a fresh Mac, go from zero to a fully-configured Claude Code + Ghostty with **one command** — no git or Homebrew needed first; the script installs everything:
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
+```
+
+Then open Ghostty, type `claude`, and log in. That's it. → [Full setup guide](docs/environment/bootstrap-setup.md)
+
+<details>
+<summary>Want to preview it first, or clone instead?</summary>
+
+```bash
+# See what it would do, change nothing:
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash -s -- --dry-run
+
+# Or clone and run manually (same result):
 git clone https://github.com/bogdanmatasaru/claude-code-guide.git
 cd claude-code-guide && ./setup.sh
 ```
 
-Then open Ghostty, type `claude`, and log in. That's it. → [Full setup guide](docs/environment/bootstrap-setup.md)
+Piping a script to `bash` runs code from the internet — you can always read
+[`install.sh`](install.sh) and [`setup.sh`](setup.sh) first, or use `--dry-run`.
+
+</details>
 
 Already set up? Jump straight to the [**Cheatsheet**](docs/cheatsheet.md) or pick your [**Learning path**](docs/learning-path.md).
 

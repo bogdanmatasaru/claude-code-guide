@@ -29,6 +29,6 @@ jobs:
       - name: ShellCheck setup.sh & tests
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck -S warning setup.sh test/run-tests.sh
+          shellcheck -S warning install.sh setup.sh test/run-tests.sh
       - name: Run setup.sh test suite
         run: ./test/run-tests.sh

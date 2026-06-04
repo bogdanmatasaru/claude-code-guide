@@ -33,6 +33,29 @@ The script runs everything from zero, in order:
 
 ## Step-by-step on a fresh Mac
 
+The fastest path — **one command**, nothing installed first (not even git; the script
+pulls everything in):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
+```
+
+[`install.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/install.sh)
+downloads this repo (via a tarball, so git isn't required yet) and runs `setup.sh` for
+you. Flags pass straight through, e.g. preview without changing anything:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash -s -- --dry-run
+```
+
+> [!TIP]
+> Piping a script to `bash` runs code from the internet. You can read
+> [`install.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/install.sh)
+> and [`setup.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/setup.sh)
+> first, or use `--dry-run` to see every action before anything is written.
+
+Prefer to clone and run it yourself? Same result:
+
 ```bash
 git clone https://github.com/bogdanmatasaru/claude-code-guide.git
 cd claude-code-guide
