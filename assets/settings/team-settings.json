@@ -1,0 +1,35 @@
+{
+  "includeCoAuthoredBy": true,
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(pnpm turbo test:*)",
+      "Bash(pnpm turbo build:*)",
+      "Bash(pnpm turbo lint:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Bash(git push:*)",
+      "Bash(rm -rf:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)"
+    ]
+  }
+}

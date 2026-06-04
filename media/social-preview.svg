@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Claude Code Guide social preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e1b2e"/>
+      <stop offset="1" stop-color="#0f0d19"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1280" height="8" fill="url(#mark)"/>
+
+  <!-- logo -->
+  <g transform="translate(96,96)">
+    <rect width="120" height="120" rx="26" fill="url(#mark)"/>
+    <path d="M34 44 L52 60 L34 76" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="60" y1="78" x2="84" y2="78" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <text x="96" y="300" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="76" font-weight="800" fill="#ffffff">Claude Code Guide</text>
+  <text x="98" y="366" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="34" font-weight="500" fill="#c4b5fd">From your first session to expert workflows.</text>
+  <text x="98" y="420" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="28" fill="#9ca3af">Commands · hooks · MCP · subagents · skills · one-command setup</text>
+
+  <!-- chips -->
+  <g font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" fill="#e5e7eb">
+    <rect x="96" y="486" width="220" height="54" rx="27" fill="#ffffff" fill-opacity="0.06" stroke="#7c3aed" stroke-opacity="0.5"/>
+    <text x="206" y="521" text-anchor="middle">Beginner → Expert</text>
+    <rect x="332" y="486" width="200" height="54" rx="27" fill="#ffffff" fill-opacity="0.06" stroke="#7c3aed" stroke-opacity="0.5"/>
+    <text x="432" y="521" text-anchor="middle">Always current</text>
+    <rect x="548" y="486" width="170" height="54" rx="27" fill="#ffffff" fill-opacity="0.06" stroke="#7c3aed" stroke-opacity="0.5"/>
+    <text x="633" y="521" text-anchor="middle">Cited</text>
+  </g>
+</svg>

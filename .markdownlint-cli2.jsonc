@@ -1,0 +1,21 @@
+{
+  // Lenient config: we care about real issues, not cosmetic line lengths.
+  "config": {
+    "default": true,
+    "MD013": false, // line length
+    "MD033": false, // inline HTML (we use <kbd>, <picture>, etc.)
+    "MD041": false, // first line in file should be a top-level heading (frontmatter)
+    "MD025": { "front_matter_title": "" }, // frontmatter title + one H1 is intentional
+    "MD028": false, // blank lines inside GitHub-style alert blockquotes are fine
+    "MD024": { "siblings_only": true }, // duplicate headings allowed across sections
+    "MD036": false, // emphasis used as heading
+    "MD026": false, // trailing punctuation in heading
+    "MD007": { "indent": 2 },
+    "MD029": false, // ordered list prefix
+    "MD046": false, // code block style
+    "MD034": false, // bare URLs are fine in "Source:" lines
+    "MD040": false // prompt examples are plain text, not code
+  },
+  "globs": ["docs/**/*.md", "*.md", "assets/**/*.md"],
+  "ignores": ["node_modules", "docs/.vitepress/dist", "**/CHANGELOG.md"]
+}

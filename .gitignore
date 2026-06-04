@@ -1,0 +1,15 @@
+# Node / VitePress
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# setup.sh backups
+*.bak.*
