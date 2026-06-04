@@ -8,9 +8,9 @@
 
 Every command, flag, hook, MCP, subagent, and best practice — plus a one-command terminal + Ghostty setup. Beginner-friendly, accurate, and cited.
 
-[![Stars](https://img.shields.io/github/stars/bogdanmatasaru/claude-code-guide?style=flat&logo=github&color=8b5cf6)](https://github.com/bogdanmatasaru/claude-code-guide/stargazers)
+[![Stars](https://img.shields.io/github/stars/bogdanmatasaru/claude-code-guide?style=flat&logo=github&color=8b5cf6&cacheSeconds=86400)](https://github.com/bogdanmatasaru/claude-code-guide/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/bogdanmatasaru/claude-code-guide?color=8b5cf6)](https://github.com/bogdanmatasaru/claude-code-guide/commits/main)
+[![Last commit](https://img.shields.io/github/last-commit/bogdanmatasaru/claude-code-guide?color=8b5cf6&cacheSeconds=86400)](https://github.com/bogdanmatasaru/claude-code-guide/commits/main)
 [![Docs site](https://img.shields.io/badge/docs-online-8b5cf6)](https://bogdanmatasaru.github.io/claude-code-guide/)
 [![CI](https://github.com/bogdanmatasaru/claude-code-guide/actions/workflows/ci.yml/badge.svg)](https://github.com/bogdanmatasaru/claude-code-guide/actions/workflows/ci.yml)
 
