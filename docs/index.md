@@ -42,3 +42,37 @@ features:
     details: Facts checked against the official docs and version-stamped, so you can trust what you read.
     link: /best-practices
 ---
+
+## Install the whole stack in one command
+
+Fresh Mac? This takes you from nothing to a fully-configured Claude Code + Ghostty —
+**no git, Homebrew, or Node needed first.** The script installs the whole stack for you.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
+```
+
+Then open **Ghostty**, type `claude`, and log in. That's it. →
+[Full setup guide](/environment/bootstrap-setup)
+
+### What that one command does
+
+It runs an idempotent, re-runnable bootstrap that installs and configures everything, in order:
+
+| Step | What it sets up |
+| --- | --- |
+| 1 | **Xcode Command Line Tools** — git & compilers |
+| 2 | **Homebrew** — the macOS package manager |
+| 3 | **Ghostty** + JetBrains Mono — the recommended terminal |
+| 4 | **Node.js** + GitHub CLI |
+| 5 | **Claude Code** — the `claude` CLI |
+| 6 | **Configs** — Ghostty theme, `~/.claude` settings, shell PATH & aliases |
+
+> [!TIP]
+> Want to preview it first, changing nothing? Add `--dry-run`:
+> `curl -fsSL …/install.sh | bash -s -- --dry-run`.
+> Already set up? Run `./setup.sh --check` anytime to validate your environment.
+
+Prefer to do it step by step, or not on a Mac? See the
+[installation guide](/getting-started/installation) and the
+[one-command setup](/environment/bootstrap-setup) page.
