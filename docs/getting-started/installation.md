@@ -20,7 +20,7 @@ The native installer is recommended because it auto-updates in the background. P
 The native install drops a binary at `~/.local/bin/claude`. Make sure that directory is on your `PATH` if the `claude` command isn't found after installing.
 
 > [!TIP]
-> On a fresh Mac, you can skip the manual steps entirely. See [../environment/bootstrap-setup.md](../environment/bootstrap-setup.md) for a one-command setup that installs everything at once.
+> On a fresh Mac, you can skip the manual steps entirely. See [the one-command setup](../environment/bootstrap-setup.md) for a one-command setup that installs everything at once.
 
 ## Platform notes
 
@@ -57,6 +57,6 @@ claude doctor
 > [!NOTE]
 > If `claude` isn't recognized, open a new terminal so your shell picks up the updated `PATH`, then try `claude doctor` again.
 
-Next: [./quickstart.md](./quickstart.md)
+Next: [Quickstart](./quickstart.md)
 
-**Source:** https://code.claude.com/docs/en/setup
+**Source:** [Set up Claude Code](https://code.claude.com/docs/en/setup)

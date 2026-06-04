@@ -59,4 +59,6 @@ You get a sandbox to think in. When you're done, delete the branch and your main
 
 The guarantee is mechanical: separate working directories mean separate files, so concurrent sessions cannot collide. That removes the main friction of running more than one Claude at once and makes it safe to let an investigative session roam without worrying about your real tree.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community practice.

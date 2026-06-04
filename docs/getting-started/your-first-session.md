@@ -19,7 +19,7 @@ Most of the time you just type in plain English. Three prefixes give you shortcu
 
 ## Permission modes
 
-Press `Shift+Tab` to cycle through three modes. The footer shows the current one:
+Press `Shift+Tab` to cycle through the three everyday modes — there are [six in total](../reference/permission-modes.md). The footer shows the current one:
 
 - **default** — Claude asks before each edit or command. Safest; best while you're learning.
 - **acceptEdits** — auto-applies file edits and safe in-scope file commands (`mkdir`, `mv`, `cp`, `rm`); it still asks before other commands like installs or deploys. Good once you trust the task.
@@ -68,11 +68,11 @@ Each task should start with a clean slate:
 /clear
 ```
 
-Run it between unrelated tasks. A lean context keeps Claude sharp; a cluttered one makes it slower and less accurate. (More on why in [../explanation/context-window.md](../explanation/context-window.md).)
+Run it between unrelated tasks. A lean context keeps Claude sharp; a cluttered one makes it slower and less accurate. (More on why in [the context window](../explanation/context-window.md).)
 
 ## Where to go next
 
 - Task-focused walkthroughs: [Guides](../guides/onboard-a-codebase.md)
 - Commands, flags, and config: [Reference](../reference/cli.md)
 
-**Source:** https://code.claude.com/docs/en/quickstart
+**Source:** [Quickstart](https://code.claude.com/docs/en/quickstart)

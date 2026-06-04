@@ -6,8 +6,14 @@ description: The fastest path to a first win with Claude Code — explore a real
 
 The goal here is a quick win: in five minutes you'll have Claude explain a real codebase and propose a change you can review before anything touches disk.
 
-> [!NOTE]
-> This assumes Claude Code is installed and you're signed in. If not, do [./installation.md](./installation.md) first (about two minutes).
+> [!TIP]
+> **Not installed yet?** Get the whole stack — Claude Code, Ghostty, and configs — in one command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
+```
+
+Sign in when prompted, then come back here. Prefer npm or Homebrew? See the [installation guide](./installation.md).
 
 ## 1. Open a project
 
@@ -41,7 +47,7 @@ explain the folder structure
 Before asking for a change, press `Shift+Tab` until the footer shows **plan mode**. In plan mode Claude investigates and proposes an approach but makes **no edits** — perfect for your first change.
 
 > [!TIP]
-> `Shift+Tab` cycles through three modes: default → acceptEdits → plan. Stop on plan for now.
+> `Shift+Tab` cycles through three modes: default → acceptEdits → plan. Stop on plan for now. (There are [six modes](../reference/permission-modes.md) in all; these three are the everyday ones.)
 
 ## 4. Ask for a small change
 
@@ -73,6 +79,6 @@ That explore → plan → review loop scales from one-line docstrings to multi-f
 > [!IMPORTANT]
 > Run `/clear` before starting an unrelated task. It resets Claude's working memory so the next task starts clean.
 
-Next: [./your-first-session.md](./your-first-session.md)
+Next: [Your first session](./your-first-session.md)
 
-**Source:** https://code.claude.com/docs/en/quickstart
+**Source:** [Quickstart](https://code.claude.com/docs/en/quickstart)

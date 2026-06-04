@@ -25,7 +25,6 @@ Claude Code's interactive REPL is driven by keyboard shortcuts. This page groups
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl+G` | Edit the current prompt or plan in `$EDITOR` |
-| `Ctrl+R` | Reverse-search through history |
 
 Vim-style editing is available via `/config` → **Editor mode**.
 

@@ -33,7 +33,7 @@ With a verifiable target, each loop iteration moves closer to correct. Without o
 
 ## The context window
 
-Everything Claude knows in a session lives in its **context window** — its working memory. It's finite, and performance degrades as it fills. Keeping context lean (clearing between tasks, compacting mid-task) is central to good results. See [./context-window.md](./context-window.md) for the details.
+Everything Claude knows in a session lives in its **context window** — its working memory. It's finite, and performance degrades as it fills. Keeping context lean (clearing between tasks, compacting mid-task) is central to good results. See [the context window](./context-window.md) for the details.
 
 ## The customization layers
 
@@ -50,4 +50,4 @@ A simple way to remember the difference: CLAUDE.md is *always* loaded, a skill i
 
 The loop does the work; the layers shape it. Give Claude a clear goal, a lean context, and a way to verify itself, and it behaves like a capable colleague rather than a fancy autocomplete.
 
-**Source:** https://code.claude.com/docs/en/how-claude-code-works
+**Source:** [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works)

@@ -25,12 +25,12 @@ These look similar but solve different problems:
 | Mechanism | Use when… | Trigger |
 | --- | --- | --- |
 | **Skill** | a capability is **sometimes relevant** and reusable | loads when the task matches |
-| **Command** | you want a **named shortcut** you invoke on demand | you type `/name` |
+| **Command** | you want a **named shortcut** you invoke yourself (a skill with `disable-model-invocation`) | you type `/name` |
 | **Hook** | something must happen **every time**, deterministically | fires automatically on an event |
 | **MCP** | you need to **connect an external tool** (database, API, service) | available once configured |
 
 - **Use a skill when** you have know-how that applies now and then — a testing convention, a deploy procedure — and you want Claude to pull it in automatically.
-- **Use a command when** you want to trigger something yourself by name.
+- **Use a command when** you want a skill that runs *only* when you invoke it by name — set `disable-model-invocation: true`. Commands and skills are one mechanism; a command is just a manually-triggered skill.
 - **Use a hook when** the action is non-negotiable: format on every edit, block commits to `main`, log every tool call.
 - **Use MCP when** Claude needs to reach a system it can't touch with files and shell — but keep your MCP set **lean**, since each server adds context and surface area.
 
@@ -49,7 +49,7 @@ Start on Sonnet. Step up to Opus when a task is genuinely hard; drop to Haiku wh
 - **`/clear`** between **unrelated** tasks — start each task with clean working memory.
 - **`/compact`** mid-task when context grows heavy but you still need continuity.
 
-And one more reset worth memorizing: if you've **corrected Claude two or more times** on the same point, stop fighting the thread. Run `/clear` and **rewrite the prompt** from scratch — a clean start beats a confused one. (Why context hygiene matters: [./context-window.md](./context-window.md).)
+And one more reset worth memorizing: if you've **corrected Claude two or more times** on the same point, stop fighting the thread. Run `/clear` and **rewrite the prompt** from scratch — a clean start beats a confused one. (Why context hygiene matters: [the context window](./context-window.md).)
 
 ## At a glance
 
@@ -59,4 +59,4 @@ And one more reset worth memorizing: if you've **corrected Claude two or more ti
 - Default to **Sonnet**; **Opus** for hard, **Haiku** for trivial.
 - New task → **/clear**. Long task filling up → **/compact**.
 
-**Source:** https://code.claude.com/docs/en/overview
+**Source:** [Claude Code overview](https://code.claude.com/docs/en/overview)

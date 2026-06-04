@@ -1,7 +1,7 @@
 ---
 name: write-tests
 description: Write focused tests for a given file or function and run them until they pass. Use when asked to add or improve test coverage. Pass the target as an argument, e.g. /write-tests src/auth.ts.
-allowed-tools: Bash(npm test:*) Bash(npx vitest:*) Bash(npx jest:*) Bash(pytest:*) Bash(uv run pytest:*) Bash(go test:*)
+allowed-tools: Bash(npm test:*), Bash(npx vitest:*), Bash(npx jest:*), Bash(pytest:*), Bash(uv run pytest:*), Bash(go test:*)
 ---
 
 # Write Tests

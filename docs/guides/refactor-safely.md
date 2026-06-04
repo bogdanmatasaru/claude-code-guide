@@ -75,4 +75,6 @@ Then run a structured review:
 
 Anthropic's best practices for refactoring: scope narrowly, lean on tests as the safety net, investigate before changing, and review the result. Plan mode enforces the read-before-write order; subagents keep investigation out of your main thread; the diff review is the final gate.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community practice.

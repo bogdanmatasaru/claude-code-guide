@@ -68,4 +68,6 @@ Opus earns its cost on hard, cross-file bugs; Sonnet is fine for the common case
 
 Anthropic's best practices frame debugging as: reproduce, write a test that captures the failure, fix, verify. The failing test is the anchor — it forces Claude to demonstrate understanding before changing anything and gives you an objective pass/fail at the end.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community practice.

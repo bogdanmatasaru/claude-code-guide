@@ -32,7 +32,7 @@ Inside an interactive session, type a prefix as the first character of your inpu
 | `/config` | Open settings (theme, editor/vim mode, and more) |
 | `/usage` | Show token and cost usage |
 | `/rewind` | Roll back to an earlier point in the session |
-| `/resume` | Switch to another session |
+| `/resume` | Resume a past session (picker if no id given) |
 | `/doctor` | Run install and config diagnostics |
 | `/agents` | Manage subagents |
 | `/mcp` | View and manage MCP servers |

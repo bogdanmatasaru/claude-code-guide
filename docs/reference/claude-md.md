@@ -68,7 +68,7 @@ Target **under 200 lines** per file. CLAUDE.md loads in full every session and c
 - Long prose, changelogs, or generated content
 - Secrets or machine-specific paths (use `CLAUDE.local.md`)
 
-See [cost-optimization.md](../guides/cost-optimization.md) for why a lean memory file saves money. Starter templates live in [`assets/claude-md/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/claude-md).
+See [cost optimization](../guides/cost-optimization.md) for why a lean memory file saves money. Starter templates live in [`assets/claude-md/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/claude-md).
 
 ## A tiny example
 

@@ -57,6 +57,6 @@ Your main context stays clean; you get the answer without the clutter. This is o
 - `/context` to check before things feel slow.
 - **Subagents** for anything that reads a lot of files.
 
-For the full picture on keeping sessions efficient, see [../guides/cost-optimization.md](../guides/cost-optimization.md).
+For the full picture on keeping sessions efficient, see [Optimize cost & context](../guides/cost-optimization.md).
 
-**Source:** https://code.claude.com/docs/en/costs
+**Source:** [Manage cost & context](https://code.claude.com/docs/en/costs)

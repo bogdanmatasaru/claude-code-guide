@@ -45,12 +45,12 @@ Claude Code reads settings from five layers. Higher layers win on conflict. Perm
 | --- | --- |
 | `permissions` | `allow` / `deny` / `ask` rules, `defaultMode`, `additionalDirectories` |
 | `env` | Environment variables exported to every command and hook |
-| `hooks` | Lifecycle automation — see [hooks.md](./hooks.md) |
+| `hooks` | Lifecycle automation — see [Hooks](./hooks.md) |
 | `model` | Default model for the session |
 | `availableModels` | Models offered in the picker |
 | `effortLevel` | Reasoning effort level |
-| `outputStyle` | Active output style — see [output-styles.md](./output-styles.md) |
-| `autoMemoryEnabled` | Toggle auto memory — see [claude-md.md](./claude-md.md) |
+| `outputStyle` | Active output style — see [Output styles](./output-styles.md) |
+| `autoMemoryEnabled` | Toggle auto memory — see [CLAUDE.md & memory](./claude-md.md) |
 | `includeCoAuthoredBy` | Add the Claude co-author trailer to commits |
 | `autoUpdatesChannel` | Which release channel to auto-update from |
 
@@ -72,7 +72,7 @@ Edit(src/**)             # any file under src/
 - A bare tool name (e.g. `WebFetch`) applies to all uses of that tool.
 - `deny` always wins over `allow`; rules from all scopes are combined.
 
-For interactive permission flow control, see [permission-modes.md](./permission-modes.md).
+For interactive permission flow control, see [Permission modes](./permission-modes.md).
 
 ## `/config` and `/permissions`
 

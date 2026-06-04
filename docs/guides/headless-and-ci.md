@@ -88,4 +88,6 @@ With this in place, mentioning `@claude` in a pull request or issue comment trig
 
 Headless mode is the same engine as interactive Claude with the human loop removed, so the same rules apply harder: tight scope, explicit verification, and minimal tool permissions. The fan-out loop scales a single good prompt across an entire codebase.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community practice.

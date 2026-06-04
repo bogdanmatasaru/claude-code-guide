@@ -1,7 +1,7 @@
 ---
 name: commit
 description: Stage changes and create a Conventional Commit from the diff. Use when the user wants to commit the current work. Does not push.
-allowed-tools: Bash(git add:*) Bash(git status:*) Bash(git diff:*) Bash(git commit:*) Bash(git log:*)
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git diff:*), Bash(git commit:*), Bash(git log:*)
 ---
 
 # Commit

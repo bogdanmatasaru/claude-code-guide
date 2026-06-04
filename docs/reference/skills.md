@@ -15,7 +15,7 @@ The directory name becomes the command name (`deploy/` → `/deploy`). Each file
 ```markdown
 ---
 description: Run our release checklist and tag a version. Use when cutting a release.
-allowed-tools: Bash(git tag *) Bash(git push *)
+allowed-tools: Bash(git tag *), Bash(git push *)
 ---
 
 # Release
@@ -80,6 +80,6 @@ Set `disable-model-invocation: true` for **manual-only** skills. Use it for side
 
 Claude Code ships several: `/code-review`, `/debug`, `/loop`, `/run`, `/verify`.
 
-See ready-to-copy examples under [`assets/skills/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/skills) and the workflow [guides](../guides/onboard-a-codebase.md).
+See ready-to-copy examples in [`assets/commands/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/commands) and [`assets/skills/`](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/skills), plus the workflow [guides](../guides/onboard-a-codebase.md).
 
 **Source:** [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)

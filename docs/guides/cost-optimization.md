@@ -60,4 +60,6 @@ You can cap extended-thinking budget with the `MAX_THINKING_TOKENS` environment 
 
 Cost in Claude Code tracks tokens, and tokens track model size and context length. Right-sizing the model and keeping the window tight attack both directly. Anthropic's guidance — be specific, keep `CLAUDE.md` lean, clear between tasks — is as much a cost strategy as a quality one.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community-reported figures noted as such.

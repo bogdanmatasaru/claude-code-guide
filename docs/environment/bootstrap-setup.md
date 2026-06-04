@@ -102,7 +102,7 @@ claude doctor         # check the Claude Code install itself
 
 ## The test suite
 
-The script ships with a **32-assertion** test suite that runs `setup.sh` in a temporary `HOME` with mocked commands — no changes to your real system:
+The script ships with a **test suite (32 checks)** that runs `setup.sh` in a temporary `HOME` with mocked commands — no changes to your real system:
 
 ```bash
 ./test/run-tests.sh

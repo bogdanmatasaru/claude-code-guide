@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Review the current diff for bugs, edge cases, and risks, then suggest concrete fixes. Use before opening or merging a PR. Read-only — makes no changes.
-allowed-tools: Bash(git diff:*) Bash(git status:*) Bash(git log:*) Bash(gh pr view:*) Bash(gh pr diff:*)
+allowed-tools: Bash(git diff:*), Bash(git status:*), Bash(git log:*), Bash(gh pr view:*), Bash(gh pr diff:*)
 ---
 
 # Review PR

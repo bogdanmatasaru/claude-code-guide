@@ -288,7 +288,7 @@ read -r -d '' CLAUDE_SETTINGS <<'EOF' || true
   "includeCoAuthoredBy": true,
   "permissions": {
     "allow": [
-      "Bash(git status)",
+      "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(ls:*)",

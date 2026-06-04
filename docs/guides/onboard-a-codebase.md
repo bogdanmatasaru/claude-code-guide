@@ -66,4 +66,6 @@ Anthropic's best practices recommend exploring before acting and giving Claude r
 > [!NOTE]
 > Start a fresh session (`/clear`) before you begin actual feature work. Onboarding fills the context with exploratory detail you no longer need; the `CLAUDE.md` you generated carries the durable knowledge forward.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices); community practice.

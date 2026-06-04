@@ -54,4 +54,6 @@ steps, plus tests/build) so it can self-correct without you watching every edit.
 > [!NOTE]
 > Commit `SPEC.md` alongside the work. It documents *why* the feature looks the way it does — useful for review and for the next person.
 
+**Related:** [Cheatsheet](../cheatsheet.md) · [Best practices](../best-practices.md) · [Learning path](../learning-path.md)
+
 **Source:** [Claude Code best practices](https://code.claude.com/docs/en/best-practices).

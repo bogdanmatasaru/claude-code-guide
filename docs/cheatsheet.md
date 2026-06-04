@@ -15,7 +15,6 @@ the full reference.
 | `/` | Run a slash command or skill (type `/` to list) |
 | `@` | Mention a file/folder or MCP resource (`@src/auth.ts`) |
 | `!` | Run a shell command; output goes into context |
-| `/memory` | Edit persistent memory (project/user [CLAUDE.md](./reference/claude-md.md)) |
 
 ## Essential keys
 
@@ -54,6 +53,7 @@ Fine-grained: `/permissions` → allow/deny patterns like `Bash(npm run test:*)`
 | `/help` | List everything |
 | `/init` | Generate a `CLAUDE.md` from the codebase |
 | `/clear` | New conversation, keep project memory (use between tasks) |
+| `/memory` | Edit persistent memory ([CLAUDE.md](./reference/claude-md.md)) |
 | `/compact [focus]` | Compress the conversation, keep the essentials |
 | `/context` | Show context-window usage |
 | `/model` · `/effort` | Switch model · set reasoning effort |

@@ -13,7 +13,7 @@ Run `/usage` to see your session token use plus **plan usage bars**:
 - A **5-hour window** (the rolling session limit).
 - A **weekly window**.
 
-`/usage` also **attributes** usage to what's consuming it — skills, subagents, and MCP servers — so you can see what's expensive. Press **`d`** and **`w`** to switch between the daily and weekly views.
+`/usage` also **attributes** usage to what's consuming it — skills, subagents, and MCP servers — so you can see what's expensive. Press **`d`** and **`w`** to switch between the 5-hour and weekly views.
 
 When you're near a limit, `/usage` shows the **time until your window resets**, which is the number you actually plan around.
 
