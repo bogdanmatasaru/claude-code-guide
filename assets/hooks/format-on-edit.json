@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); [ -z \"$f\" ] && exit 0; case \"$f\" in *.js|*.jsx|*.ts|*.tsx|*.json|*.css|*.md) npx --no-install prettier --write \"$f\" 2>/dev/null ;; *.py) ruff format \"$f\" 2>/dev/null; ruff check --fix \"$f\" 2>/dev/null ;; esac; exit 0",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
