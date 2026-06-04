@@ -22,11 +22,21 @@ Claude Code's interactive REPL is driven by keyboard shortcuts. This page groups
 
 ## Editing
 
+Move and delete fast — no arrow-keying character by character:
+
 | Shortcut | Action |
 | --- | --- |
+| `Ctrl+A` / `Ctrl+E` | Jump to the start / end of the line |
+| `Option/Alt+←` / `→` | Jump backward / forward one word |
+| `Ctrl+W` | Delete the previous word |
+| `Ctrl+U` | Delete from the cursor to the start of the line |
+| `Ctrl+K` | Delete from the cursor to the end of the line |
 | `Ctrl+G` | Edit the current prompt or plan in `$EDITOR` |
 
 Vim-style editing is available via `/config` → **Editor mode**.
+
+> [!TIP]
+> Changed your mind about a long prompt? Press `Ctrl+C` **once** to wipe the whole input instantly — no backspacing letter by letter (a second press exits Claude Code). A terminal's `Cmd+A` selects the scrollback for copying, not the prompt text, so use these kill-line shortcuts to clear it.
 
 ## macOS Option keys
 
