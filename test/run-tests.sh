@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# test/run-tests.sh — Valideaza setup.sh fara sa atinga sistemul real.
+# test/run-tests.sh — Validate setup.sh without touching the real system.
 #
-# Ruleaza setup.sh intr-un HOME temporar, cu comenzi externe mock (brew, curl,
-# claude, gh, xcode-select). Verifica: sintaxa, shellcheck, scrierile de config,
-# JSON valid, persistarea PATH, idempotenta (rulare x2 fara backup-uri).
+# Runs setup.sh in a temporary HOME with mocked external commands (brew, curl,
+# claude, gh, xcode-select). Checks: syntax, shellcheck, config writes, valid
+# JSON, PATH persistence, idempotency (run x2 with no backups).
 #
 set -uo pipefail
 
@@ -24,14 +24,14 @@ assert_contains() { # assert_contains "desc" file "needle"
     printf "  ${GREEN}PASS${RESET} %s\n" "$desc"; PASS=$((PASS+1))
   else printf "  ${RED}FAIL${RESET} %s\n" "$desc"; FAIL=$((FAIL+1)); fi
 }
-# assert_out "desc" "$OUTPUT" "needle"  — outputul CONTINE needle (substring fix)
+# assert_out "desc" "$OUTPUT" "needle"  — output CONTAINS needle (fixed substring)
 assert_out() {
   local desc="$1" out="$2" needle="$3"
   if grep -qF -- "$needle" <<<"$out"; then
     printf "  ${GREEN}PASS${RESET} %s\n" "$desc"; PASS=$((PASS+1))
   else printf "  ${RED}FAIL${RESET} %s\n" "$desc"; FAIL=$((FAIL+1)); fi
 }
-# assert_not_out "desc" "$OUTPUT" "needle"  — outputul NU contine needle
+# assert_not_out "desc" "$OUTPUT" "needle"  — output does NOT contain needle
 assert_not_out() {
   local desc="$1" out="$2" needle="$3"
   if grep -qF -- "$needle" <<<"$out"; then
@@ -41,22 +41,22 @@ assert_not_out() {
 section() { printf "\n${BOLD}== %s ==${RESET}\n" "$*"; }
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "1. Sintaxa & lint static"
+section "1. Syntax & static lint"
 # ─────────────────────────────────────────────────────────────────────────────
 assert "bash -n (setup.sh)"            bash -n "$SETUP"
 assert "bash -n (run-tests.sh)"        bash -n "$0"
 if command -v shellcheck >/dev/null 2>&1; then
   if shellcheck -S warning "$SETUP"; then
-    printf "  ${GREEN}PASS${RESET} shellcheck (fara warning-uri)\n"; PASS=$((PASS+1))
+    printf "  ${GREEN}PASS${RESET} shellcheck (no warnings)\n"; PASS=$((PASS+1))
   else
-    printf "  ${RED}FAIL${RESET} shellcheck a gasit probleme\n"; FAIL=$((FAIL+1))
+    printf "  ${RED}FAIL${RESET} shellcheck found problems\n"; FAIL=$((FAIL+1))
   fi
 else
-  printf "  ${DIM}.... shellcheck nu e instalat (brew install shellcheck) — sar peste${RESET}\n"
+  printf "  ${DIM}.... shellcheck not installed (brew install shellcheck) — skipping${RESET}\n"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Construieste un mediu mock: HOME temporar + comenzi false pe PATH.
+# Build a mock environment: temporary HOME + fake commands on PATH.
 # ─────────────────────────────────────────────────────────────────────────────
 make_sandbox() {
   SBOX="$(mktemp -d)"
@@ -64,14 +64,14 @@ make_sandbox() {
   export BREW_STATE="$SBOX/brew-state"; mkdir -p "$BREW_STATE"
   BIN="$SBOX/bin"; mkdir -p "$BIN"
 
-  # xcode-select: pretinde ca CLT sunt deja instalate
+  # xcode-select: pretend CLT are already installed
   cat > "$BIN/xcode-select" <<'SH'
 #!/usr/bin/env bash
 [ "$1" = "-p" ] && { echo /Library/Developer/CommandLineTools; exit 0; }
 exit 0
 SH
 
-  # brew: stateful (markere in $BREW_STATE)
+  # brew: stateful (markers in $BREW_STATE)
   cat > "$BIN/brew" <<'SH'
 #!/usr/bin/env bash
 S="$BREW_STATE"
@@ -83,7 +83,7 @@ case "$1" in
     key="${2#--}_$3"
     [ -f "$S/$key" ] && exit 0 || exit 1 ;;
   install)
-    # Simuleaza un esec de retea daca testul cere (BREW_FAIL_INSTALL)
+    # Simulate a network failure if the test asks (BREW_FAIL_INSTALL)
     if [ -n "${BREW_FAIL_INSTALL:-}" ]; then echo "mock: network fail"; exit 1; fi
     if [ "$2" = "--cask" ]; then touch "$S/cask_$3"
     else touch "$S/formula_$2"; fi
@@ -92,7 +92,7 @@ esac
 exit 0
 SH
 
-  # curl: pentru claude.ai/install.sh emite un script ce instaleaza un claude fals
+  # curl: for claude.ai/install.sh emit a script that installs a fake claude
   cat > "$BIN/curl" <<'SH'
 #!/usr/bin/env bash
 url="${@: -1}"
@@ -115,14 +115,14 @@ echo "gh mock"; exit 0
 SH
 
   chmod +x "$BIN"/*
-  # node real e nevoie inauntru pentru validarea JSON din setup.sh (validate()).
-  # Il aducem prin symlink ca sa nu includem /opt/homebrew/bin (ar umbri brew-ul mock).
+  # The real node is needed inside for setup.sh's JSON validation (validate()).
+  # We symlink it in so we don't add /opt/homebrew/bin (which would shadow the brew mock).
   REAL_NODE="$(command -v node || true)"
   [ -n "$REAL_NODE" ] && ln -sf "$REAL_NODE" "$BIN/node"
   export SANDBOX_BIN="$BIN"
 }
 
-run_setup() { # run_setup [args...] ; ruleaza setup.sh in sandbox
+run_setup() { # run_setup [args...] ; run setup.sh in the sandbox
   env -i \
     HOME="$FAKEHOME" \
     BREW_STATE="$BREW_STATE" \
@@ -133,87 +133,87 @@ run_setup() { # run_setup [args...] ; ruleaza setup.sh in sandbox
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "2. Rulare completa pe 'Mac nou' (mock) — scrie config-uri"
+section "2. Full run on a 'fresh Mac' (mock) — writes configs"
 # ─────────────────────────────────────────────────────────────────────────────
 make_sandbox
 OUT1="$(run_setup 2>&1)"; RC1=$?
 echo "$OUT1" | sed 's/^/    | /'
-assert "exit code 0 la prima rulare"          test "$RC1" -eq 0
+assert "exit code 0 on first run"             test "$RC1" -eq 0
 
-assert "config Ghostty exista"                test -f "$FAKEHOME/.config/ghostty/config"
-assert_contains "Ghostty: tema Catppuccin"    "$FAKEHOME/.config/ghostty/config" "Catppuccin Mocha"
+assert "Ghostty config exists"                test -f "$FAKEHOME/.config/ghostty/config"
+assert_contains "Ghostty: Catppuccin theme"   "$FAKEHOME/.config/ghostty/config" "Catppuccin Mocha"
 assert_contains "Ghostty: JetBrains Mono"     "$FAKEHOME/.config/ghostty/config" "font-family = JetBrains Mono"
 
-assert "settings.json exista"                 test -f "$FAKEHOME/.claude/settings.json"
-# path-ul trece prin argv (process.argv[1]), nu interpolat in sursa JS -> robust la spatii
-assert "settings.json e JSON valid"           node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$FAKEHOME/.claude/settings.json"
-assert "global CLAUDE.md exista"              test -f "$FAKEHOME/.claude/CLAUDE.md"
+assert "settings.json exists"                 test -f "$FAKEHOME/.claude/settings.json"
+# the path goes through argv (process.argv[1]), not interpolated into JS source -> robust to spaces
+assert "settings.json is valid JSON"          node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$FAKEHOME/.claude/settings.json"
+assert "global CLAUDE.md exists"              test -f "$FAKEHOME/.claude/CLAUDE.md"
 
-assert "claude 'instalat' (mock) pe PATH"     test -x "$FAKEHOME/.local/bin/claude"
-# PATH + shellenv trebuie sa fie in .zshrc (sourceat de shell-uri interactive non-login)
-assert_contains "PATH ~/.local/bin persistat" "$FAKEHOME/.zshrc" '.local/bin'
-assert_contains "brew shellenv persistat"     "$FAKEHOME/.zshrc" 'shellenv'
+assert "claude 'installed' (mock) on PATH"    test -x "$FAKEHOME/.local/bin/claude"
+# PATH + shellenv must be in .zshrc (sourced by non-login interactive shells)
+assert_contains "PATH ~/.local/bin persisted" "$FAKEHOME/.zshrc" '.local/bin'
+assert_contains "brew shellenv persisted"     "$FAKEHOME/.zshrc" 'shellenv'
 assert_contains "alias cc in zshrc"           "$FAKEHOME/.zshrc" "alias cc='claude'"
 
-assert "brew a instalat ghostty (marker)"     test -f "$BREW_STATE/cask_ghostty"
-assert "brew a instalat node (marker)"        test -f "$BREW_STATE/formula_node"
-assert_out "raport final: MEDIU VALID"        "$OUT1" "MEDIU VALID"
+assert "brew installed ghostty (marker)"      test -f "$BREW_STATE/cask_ghostty"
+assert "brew installed node (marker)"         test -f "$BREW_STATE/formula_node"
+assert_out "final report: ENVIRONMENT OK"     "$OUT1" "ENVIRONMENT OK"
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "3. Idempotenta — a doua rulare nu strica nimic"
+section "3. Idempotency — a second run breaks nothing"
 # ─────────────────────────────────────────────────────────────────────────────
 OUT2="$(run_setup 2>&1)"; RC2=$?
-assert "exit code 0 la a doua rulare"         test "$RC2" -eq 0
-assert_out "a doua rulare: 'deja instalat'"   "$OUT2" "deja instalat"
-assert_out "a doua rulare: config 'deja la zi'" "$OUT2" "deja la zi"
-# Niciun backup nu trebuie creat (continut identic, fisiere intacte)
+assert "exit code 0 on second run"            test "$RC2" -eq 0
+assert_out "second run: 'already installed'"  "$OUT2" "already installed"
+assert_out "second run: config 'up to date'"  "$OUT2" "already up to date"
+# No backup should be created (identical content, files intact)
 BAKS=$(find "$FAKEHOME" -name '*.bak.*' 2>/dev/null | wc -l | tr -d ' ')
-assert "zero fisiere .bak (idempotent)"       test "$BAKS" -eq 0
+assert "zero .bak files (idempotent)"         test "$BAKS" -eq 0
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "4. Mod --check pe mediu valid"
+section "4. --check mode on a valid environment"
 # ─────────────────────────────────────────────────────────────────────────────
 OUT3="$(run_setup --check 2>&1)"; RC3=$?
-assert "exit code 0 la --check"               test "$RC3" -eq 0
-assert_out "--check raporteaza MEDIU VALID"   "$OUT3" "MEDIU VALID"
+assert "exit code 0 on --check"               test "$RC3" -eq 0
+assert_out "--check reports ENVIRONMENT OK"   "$OUT3" "ENVIRONMENT OK"
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "5. --check pe mediu rupt detecteaza problema"
+section "5. --check on a broken environment detects the problem"
 # ─────────────────────────────────────────────────────────────────────────────
 rm -f "$FAKEHOME/.config/ghostty/config"
 OUT4="$(run_setup --check 2>&1)"; RC4=$?
-assert "exit code != 0 cand lipseste config"  test "$RC4" -ne 0
-assert_out "raporteaza 'probleme' (esec curat)" "$OUT4" "probleme"
+assert "exit code != 0 when config missing"   test "$RC4" -ne 0
+assert_out "reports 'problem' (clean fail)"   "$OUT4" "problem"
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "6. --help e curat (fara linii de cod scapate)"
+section "6. --help is clean (no leaked code lines)"
 # ─────────────────────────────────────────────────────────────────────────────
 OUT_HELP="$(run_setup --help 2>&1)"
-assert_out "--help arata utilizarea"          "$OUT_HELP" "Utilizare:"
-assert_not_out "--help nu scapa linia 'set'"  "$OUT_HELP" "set -uo"
+assert_out "--help shows usage"               "$OUT_HELP" "Usage:"
+assert_not_out "--help doesn't leak 'set'"    "$OUT_HELP" "set -uo"
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "7. Esec de retea la 'brew install' NU omoara scriptul"
+section "7. A network failure on 'brew install' does NOT kill the script"
 # ─────────────────────────────────────────────────────────────────────────────
 make_sandbox
 OUT_FAIL="$(BREW_FAIL_INSTALL=1 run_setup 2>&1)"; RC_FAIL=$?
-assert "scriptul nu crapa (exit 0)"           test "$RC_FAIL" -eq 0
-assert_out "ruleaza pana la capat (banner Gata)" "$OUT_FAIL" "Gata."
-assert_out "avertizeaza ca nu s-a instalat"   "$OUT_FAIL" "nu s-a instalat"
-# Continua dincolo de brew: scrie totusi config-urile
-assert "config Ghostty scris dupa esec brew"  test -f "$FAKEHOME/.config/ghostty/config"
+assert "script doesn't crash (exit 0)"        test "$RC_FAIL" -eq 0
+assert_out "runs to the end (Done. banner)"   "$OUT_FAIL" "Done."
+assert_out "warns it could not be installed"  "$OUT_FAIL" "could not be installed"
+# Continues past brew: still writes the configs
+assert "Ghostty config written after fail"    test -f "$FAKEHOME/.config/ghostty/config"
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "8. Dry-run nu scrie nimic"
+section "8. Dry-run writes nothing"
 # ─────────────────────────────────────────────────────────────────────────────
 make_sandbox
 run_setup --dry-run >/dev/null 2>&1
 WRITES=$(find "$FAKEHOME" -type f 2>/dev/null | wc -l | tr -d ' ')
-assert "dry-run: zero fisiere scrise"         test "$WRITES" -eq 0
+assert "dry-run: zero files written"          test "$WRITES" -eq 0
 
 # ─────────────────────────────────────────────────────────────────────────────
-section "Rezultat"
+section "Result"
 # ─────────────────────────────────────────────────────────────────────────────
 printf "\n${BOLD}%d PASS, %d FAIL${RESET}\n" "$PASS" "$FAIL"
-[ "$FAIL" -eq 0 ] && { printf "${GREEN}${BOLD}TOATE TESTELE TREC.${RESET}\n"; exit 0; }
-printf "${RED}${BOLD}AU ESUAT TESTE.${RESET}\n"; exit 1
+[ "$FAIL" -eq 0 ] && { printf "${GREEN}${BOLD}ALL TESTS PASS.${RESET}\n"; exit 0; }
+printf "${RED}${BOLD}TESTS FAILED.${RESET}\n"; exit 1
