@@ -15,7 +15,7 @@ This is the authority layer: a curated set of habits that separate fluent Claude
 1. **Follow explore → plan → code → commit.** Let Claude read the relevant code before it writes any, plan the change, implement, then commit. Skipping the explore step is the most common cause of confidently wrong edits.
 2. **Don't over-plan.** If the diff is one sentence to describe, skip the plan and just ask. Planning a trivial change wastes tokens and your attention.
 3. **Always give Claude a verifiable check.** Tests, a build, or a screenshot to compare against is "the difference between a session you watch and one you walk away from." Without a check, the model has no signal that it succeeded.
-4. **For big features, interview-me-then-spec, then implement in a FRESH session.** Have Claude interview you to produce a spec, then start a clean session to build it. The planning conversation is clutter the implementation doesn't need.
+4. **For big features, interview-me-then-spec, then implement in a FRESH session.** Have Claude interview you to produce a spec, then start a clean session to build it. The planning conversation is clutter the implementation doesn't need. → [Spec a big feature](./guides/spec-a-feature.md)
 5. **Iterate visually.** Paste a screenshot, let Claude compare its result to the target, and fix the differences. The visual loop closes much faster than describing UI in prose.
 
 > [!TIP]

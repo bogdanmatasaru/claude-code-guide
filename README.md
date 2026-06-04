@@ -43,7 +43,7 @@ The official docs are excellent reference material — but they don't hold your 
 - **Simple → complex** — a first-timer and a power user both find their level.
 - **Accurate & cited** — facts checked against the [official docs](https://code.claude.com/docs) and version-stamped.
 - **Copy-paste assets** — drop-in `CLAUDE.md` templates, slash commands, hooks, and settings.
-- **A unique wedge** — the only guide with a reproducible one-command environment + cost/rate-limit monitoring.
+- **A real environment, not just docs** — a reproducible one-command setup plus cost and rate-limit monitoring you won't find in other guides.
 
 ## What's inside
 

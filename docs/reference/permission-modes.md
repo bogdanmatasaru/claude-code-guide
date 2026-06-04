@@ -18,7 +18,7 @@ Permission modes control how much Claude Code can do without asking. You cycle b
 | `bypassPermissions` | Skips all permission checks entirely |
 
 > [!NOTE]
-> `auto` is a research preview (v2.1.83+) and requires Opus 4.6+ or Sonnet 4.6+. State your provider when relying on model availability — Bedrock/Vertex may resolve to different versions.
+> `auto` is a research preview (v2.1.83+) and requires Opus 4.6+ or Sonnet 4.6. State your provider when relying on model availability — Bedrock/Vertex may resolve to different versions.
 
 ## Cycling and setting the default
 

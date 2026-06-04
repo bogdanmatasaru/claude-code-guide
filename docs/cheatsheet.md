@@ -39,9 +39,10 @@ Full list → [keyboard shortcuts](./reference/keyboard-shortcuts.md).
 | Mode | Behavior |
 |---|---|
 | `default` | Reads freely; asks before edits/commands |
-| `acceptEdits` | Auto-applies file edits + safe fs commands in scope |
+| `acceptEdits` | Auto-applies file edits + in-scope fs commands (`mkdir`/`mv`/`cp`/`rm`) |
 | `plan` | Research & plan only — no edits |
 | `auto` | Runs with a server-side safety classifier (preview, v2.1.83+) |
+| `dontAsk` | Runs only pre-approved tools, asks for nothing else (CI) |
 | `bypassPermissions` | No checks — only in a sandbox (`--dangerously-skip-permissions`) |
 
 Fine-grained: `/permissions` → allow/deny patterns like `Bash(npm run test:*)`.

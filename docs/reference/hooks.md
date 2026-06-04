@@ -50,13 +50,17 @@ For tool events, `matcher` filters by tool name: `Bash`, `Edit|Write` (pipe-sepa
 
 ## Exit codes
 
-A command hook signals its result through its exit code:
+A command hook signals its result through its exit code. The exact effect depends on
+whether the event **can block** (see the table above):
 
 | Exit code | Meaning |
 | --- | --- |
-| `0` | Success. `stdout` is parsed as JSON if present. |
-| `2` | Block. `stderr` is fed back to Claude as feedback. |
+| `0` | Success. On `UserPromptSubmit` and `SessionStart`, `stdout` is added to Claude's context; for other events `stdout` goes to the debug log. |
+| `2` | **Block** — but only on blocking-capable events (e.g. `PreToolUse`, `Stop`). `stderr` is fed back to Claude. On non-blocking events like `PostToolUse` the action already ran, so exit `2` doesn't undo it; `stderr` is shown to Claude as context. |
 | other | Non-blocking error; `stderr` goes to the debug log. |
+
+> [!NOTE]
+> A hook can also return structured JSON on stdout (exit `0`) for finer control. The fields and which events honor them are documented at the source below — check it before relying on a specific behavior.
 
 ## Example: format on edit
 

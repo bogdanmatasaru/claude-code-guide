@@ -36,7 +36,7 @@ This is the step that separates a real fix from a guess:
 
 > Write a failing test that reproduces this bug. Run it and show me it fails for the same reason as the stack trace. Don't change the source yet.
 
-A failing test is your verifiable check — the difference between a session you watch and one you walk away from. If Claude can't make the test fail the same way, it hasn't understood the bug yet.
+A failing test is your ground truth. If Claude can't make the test fail the same way you see the bug, it hasn't understood the problem yet — so don't let it "fix" anything until that test goes red.
 
 ## Step 3 — Fix the root cause
 

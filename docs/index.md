@@ -32,7 +32,7 @@ features:
   - icon: 🧩
     title: Copy-paste asset library
     details: Ready-to-use CLAUDE.md templates, slash commands, hooks, and settings you can drop into your own projects.
-    link: /reference/skills
+    link: https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets
   - icon: 💸
     title: Go faster and cheaper
     details: Model selection, context management, and the optimizations experienced developers actually use.

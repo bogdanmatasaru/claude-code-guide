@@ -60,6 +60,7 @@ export default withMermaid({
         items: [
           { text: 'Onboard a codebase', link: '/guides/onboard-a-codebase' },
           { text: 'Fix a bug', link: '/guides/fix-a-bug' },
+          { text: 'Spec a big feature', link: '/guides/spec-a-feature' },
           { text: 'Refactor safely', link: '/guides/refactor-safely' },
           { text: 'Parallel work (worktrees)', link: '/guides/parallel-work-worktrees' },
           { text: 'Headless & CI', link: '/guides/headless-and-ci' },

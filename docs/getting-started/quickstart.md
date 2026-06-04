@@ -34,7 +34,7 @@ Claude searches the files, then summarizes the project and points you at the ent
 explain the folder structure
 ```
 
-**You just did X:** you used Claude Code as a codebase guide — no setup, no manual file selection.
+**Win:** you used Claude Code as a codebase guide — no setup, no manual file selection.
 
 ## 3. Switch to plan mode
 
@@ -57,7 +57,7 @@ Claude reads the relevant file and presents a **plan** with the exact edit it in
 
 Read the proposed change. When it looks right, approve it (Claude will then exit plan mode and apply the edit, showing you the diff). If it's off, just type what to fix instead.
 
-**You just did X:** you reviewed an AI-proposed diff before it ran — the core safety habit that makes Claude Code trustworthy on real work.
+**Win:** you reviewed an AI-proposed diff before it ran — the core safety habit that makes Claude Code trustworthy on real work.
 
 ## What just happened
 

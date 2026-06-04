@@ -22,7 +22,7 @@ Most of the time you just type in plain English. Three prefixes give you shortcu
 Press `Shift+Tab` to cycle through three modes. The footer shows the current one:
 
 - **default** — Claude asks before each edit or command. Safest; best while you're learning.
-- **acceptEdits** — auto-applies file edits but still confirms riskier actions. Good once you trust the task.
+- **acceptEdits** — auto-applies file edits and safe in-scope file commands (`mkdir`, `mv`, `cp`, `rm`); it still asks before other commands like installs or deploys. Good once you trust the task.
 - **plan** — investigates and proposes, but makes **no changes**. Best for non-trivial or multi-file work.
 
 A good rule: reach for **plan mode** whenever you can't describe the change in a single sentence.
@@ -57,7 +57,7 @@ With a verifiable target, Claude self-corrects in a loop instead of guessing.
 ## Course-correct without starting over
 
 - **Esc** interrupts Claude mid-action — use it the moment it goes the wrong way.
-- **Esc Esc** rewinds the conversation so you can edit an earlier message and branch from there.
+- **Esc Esc** opens the rewind menu, where you can restore to an earlier checkpoint or edit a previous message and branch from there.
 - If you've corrected Claude **two or more times** on the same point, stop. Run `/clear` and rewrite your prompt from scratch — it's faster than digging out of a confused thread.
 
 ## /clear discipline
