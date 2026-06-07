@@ -20,6 +20,9 @@ Claude Code's interactive REPL is driven by keyboard shortcuts. This page groups
 | `Ctrl+T` | Show the task list |
 | `Shift+Tab` | Cycle permission mode (see [permission modes](./permission-modes.md)) |
 
+> [!TIP]
+> **Queued messages:** if you type and press Enter while Claude is already working, your message **queues** instead of interrupting — Claude runs it after the current turn finishes. To run a queued message *now*, press `Esc` to stop the current turn; Claude picks up the queued one immediately. (`Ctrl+C` clears the input/queue instead of running it.)
+
 ## Editing
 
 Move and delete fast — no arrow-keying character by character:
