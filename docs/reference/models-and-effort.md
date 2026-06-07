@@ -34,17 +34,20 @@ Use `/model` to open the picker (it saves your default since v2.1.153), or `Opti
 
 ## Effort
 
-Effort controls how much reasoning the model spends per turn.
+Effort controls **how much reasoning the model spends per turn** — how thoroughly it deliberates before and while it acts. It does **not** change the model's raw capability (that's your [model choice](#model-aliases)); it dials how hard that model thinks. More effort means more careful, thorough work, at the cost of more time and tokens.
 
-| Level | Use for |
-| --- | --- |
-| `low` | Quick, mechanical edits |
-| `medium` | Everyday tasks |
-| `high` | Default on Opus 4.8 / Sonnet 4.6 |
-| `xhigh` | Hard problems worth more compute |
-| `max` | Maximum reasoning |
+| Level | How it works | Best for | Speed / cost |
+| --- | --- | --- | --- |
+| `low` | Answers fast, minimal deliberation | Mechanical edits — typos, renames, log lines | Fastest, cheapest |
+| `medium` | Balanced, reasonable reasoning | Routine, well-scoped tasks | Balanced |
+| `high` | Reads carefully, checks details, weighs trade-offs (**default on Opus 4.8 / Sonnet 4.6**) | Everyday real work | Slower, more tokens |
+| `xhigh` | Explores alternatives, anticipates edge cases | Hard problems worth the extra compute | Slow, expensive |
+| `max` | Maximum deliberation — considers rare cases, double-checks | The hardest work: subtle bugs, large refactors, architecture | Slowest, most expensive |
 
-Set it with `/effort`, the `--effort` flag, or the `effortLevel` setting.
+Set it with `/effort`, the `--effort` flag, or the `effortLevel` setting. Every level above the default burns more reasoning tokens, so match the effort to the difficulty: high effort on a one-line change is wasted time and [weekly usage](../environment/monitoring-cost-ratelimits.md).
+
+> [!TIP]
+> Effort is the dial; the model is the engine. A stronger model (Opus) reasons better at any effort; more effort makes whichever model you're on reason harder. Need a one-off deep pass without changing the setting? Add `ultrathink` to your prompt (see [Thinking](#thinking)).
 
 ## Thinking
 
