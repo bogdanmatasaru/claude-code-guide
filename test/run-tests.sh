@@ -114,6 +114,14 @@ SH
 echo "gh mock"; exit 0
 SH
 
+  # security: pretend there's no Claude credential in the keychain, so the
+  # account-aware status line detection is deterministic (defaults to consumer)
+  # and never touches the real login keychain during tests.
+  cat > "$BIN/security" <<'SH'
+#!/usr/bin/env bash
+exit 1
+SH
+
   chmod +x "$BIN"/*
   # The real node is needed inside for setup.sh's JSON validation (validate()).
   # We symlink it in so we don't add /opt/homebrew/bin (which would shadow the brew mock).
@@ -176,6 +184,22 @@ section "4. --check mode on a valid environment"
 OUT3="$(run_setup --check 2>&1)"; RC3=$?
 assert "exit code 0 on --check"               test "$RC3" -eq 0
 assert_out "--check reports ENVIRONMENT OK"   "$OUT3" "ENVIRONMENT OK"
+
+# ─────────────────────────────────────────────────────────────────────────────
+section "4b. Account-aware status-line profiles"
+# ─────────────────────────────────────────────────────────────────────────────
+CCSL="$FAKEHOME/.config/ccstatusline"
+assert "profile-switch.sh installed (exec)"   test -x "$CCSL/profile-switch.sh"
+assert "consumer profile installed"           test -f "$CCSL/settings.consumer.json"
+assert "enterprise profile installed"         test -f "$CCSL/settings.enterprise.json"
+assert "consumer profile valid JSON"          node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$CCSL/settings.consumer.json"
+assert "enterprise profile valid JSON"        node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$CCSL/settings.enterprise.json"
+assert_contains "enterprise profile uses extra-usage"  "$CCSL/settings.enterprise.json" "extra-usage-remaining"
+assert_contains "consumer profile uses session-usage"  "$CCSL/settings.consumer.json" "session-usage"
+assert "enterprise profile drops weekly-usage"  bash -c "! grep -qF weekly-usage '$CCSL/settings.enterprise.json'"
+assert_contains "launcher carries the enterprise shim"  "$CCSL/profile-switch.sh" "rate_limits"
+assert_contains "settings.json points at the launcher" "$FAKEHOME/.claude/settings.json" "profile-switch.sh"
+assert_out "--check reports the profile switcher"      "$OUT3" "profile switcher installed"
 
 # ─────────────────────────────────────────────────────────────────────────────
 section "5. --check on a broken environment detects the problem"

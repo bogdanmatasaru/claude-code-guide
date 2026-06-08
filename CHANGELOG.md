@@ -20,6 +20,20 @@ Claude Code releases.
 - One-command `setup.sh` bootstrap (Ghostty + Claude Code) with a 32-assertion test
   suite, plus cost / rate-limit monitoring guidance.
 - Trust scaffolding: LICENSE, CONTRIBUTING, Code of Conduct, issue/PR templates, CI.
+- **Account-aware status line.** A launcher (`assets/statusline/profile-switch.sh`)
+  auto-selects a `ccstatusline` profile by the account's `subscriptionType`: an
+  **enterprise/team** profile (5h reset timer + monthly credit) and a **consumer**
+  profile (5h/7d usage bars). `setup.sh` installs both profiles + the launcher, wires
+  `statusLine` to it, and upgrades older installs that still point at plain
+  `ccstatusline`. `--check` reports the detected account and validates the profiles.
+
+### Fixed
+- **Enterprise/Team status line showing `[Timeout]`.** Those seats return `null`
+  `five_hour` / `seven_day` rate-limit buckets, so `ccstatusline`'s usage widgets
+  rendered `[Timeout]`. The enterprise profile uses widgets that have real data, and
+  the launcher injects a synthetic `rate_limits.five_hour.resets_at` (from
+  `ccstatusline`'s block-cache) so the 5h timer and monthly credit both render stably
+  instead of poisoning the shared usage fetch.
 
 ### Changed
 - Translated the entire guide and the `setup.sh` bootstrap to professional English.

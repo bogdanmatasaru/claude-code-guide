@@ -95,6 +95,29 @@ ensure_line() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Account detection (for the account-aware status line)
+# ─────────────────────────────────────────────────────────────────────────────
+# Read ONLY the subscriptionType field from the Claude Code credential (never the
+# token). macOS: Keychain item "Claude Code-credentials"; else ~/.claude/.credentials.json.
+# Empty string if not logged in / undetectable — callers then default to consumer.
+detect_subscription() {
+  local creds="" py
+  py="$(command -v python3 || echo /usr/bin/python3)"
+  [ -x "$py" ] || return 0
+  if command -v security >/dev/null 2>&1; then
+    creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null || true)
+  fi
+  [ -z "$creds" ] && [ -f "$HOME/.claude/.credentials.json" ] && creds=$(cat "$HOME/.claude/.credentials.json" 2>/dev/null || true)
+  [ -z "$creds" ] && return 0
+  printf '%s' "$creds" | "$py" -c 'import sys, json
+try:
+    d = json.load(sys.stdin) or {}
+    print(((d.get("claudeAiOauth") or {}).get("subscriptionType")) or "")
+except Exception:
+    print("")' 2>/dev/null || true
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Validation (used at the end and for --check)
 # ─────────────────────────────────────────────────────────────────────────────
 validate() {
@@ -121,6 +144,26 @@ validate() {
     else
       warn "settings.json — INVALID JSON"; fails=$((fails+1))
     fi
+  fi
+  # Account-aware status line: profiles present + valid, and which one is active.
+  local sl="$HOME/.config/ccstatusline"
+  if [ -f "$sl/profile-switch.sh" ]; then
+    ok "status-line profile switcher installed"
+    for p in settings.enterprise.json settings.consumer.json; do
+      if [ ! -f "$sl/$p" ]; then
+        warn "ccstatusline $p — MISSING (re-run ./setup.sh)"; fails=$((fails+1))
+      elif command -v node >/dev/null 2>&1 && \
+           node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$sl/$p" >/dev/null 2>&1; then
+        ok "ccstatusline $p is valid JSON"
+      else
+        warn "ccstatusline $p — INVALID JSON"; fails=$((fails+1))
+      fi
+    done
+    case "$(detect_subscription)" in
+      enterprise|team) ok "Claude account: enterprise/team → enterprise profile (5h timer + credit, no [Timeout])" ;;
+      "")              skip "Claude account: not detected (log in to Claude Code) → consumer profile by default" ;;
+      *)               ok "Claude account: consumer (Pro/Max) → consumer profile (5h/7d usage)" ;;
+    esac
   fi
   echo
   if [ "$fails" -eq 0 ]; then
@@ -289,7 +332,7 @@ read -r -d '' CLAUDE_SETTINGS <<'EOF' || true
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "includeCoAuthoredBy": true,
-  "statusLine": { "type": "command", "command": "ccstatusline", "padding": 0 },
+  "statusLine": { "type": "command", "command": "sh $HOME/.config/ccstatusline/profile-switch.sh", "padding": 0 },
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -338,15 +381,44 @@ if [ -d "$SL_ASSETS" ]; then
     run "npm install -g ccstatusline@2" \
       || warn "ccstatusline not installed (needs npm) — the status line stays blank until it is"
   fi
-  # its config, only if you don't already have one
-  if [ -f "$HOME/.config/ccstatusline/settings.json" ]; then
-    skip "ccstatusline config exists — not overwriting"
-  elif $DRY_RUN; then
-    skip "[dry-run] write ~/.config/ccstatusline/settings.json"
+  # ccstatusline config + account-aware profiles. We ship TWO profiles plus a tiny
+  # launcher (profile-switch.sh) that auto-selects by account type: consumer
+  # (Pro/Max) keeps the 5h/7d usage bars; enterprise/team swap to a 5h-timer +
+  # monthly-credit profile, because their five_hour/seven_day buckets come back
+  # null and the usage widgets would otherwise show "[Timeout]".
+  CCSL_DIR="$HOME/.config/ccstatusline"
+  if $DRY_RUN; then
+    skip "[dry-run] install ccstatusline profiles + profile-switch.sh into $CCSL_DIR"
   else
-    mkdir -p "$HOME/.config/ccstatusline"
-    cp "$SL_ASSETS/ccstatusline-settings.json" "$HOME/.config/ccstatusline/settings.json"
-    ok "wrote ~/.config/ccstatusline/settings.json"
+    mkdir -p "$CCSL_DIR"
+    # default config (consumer layout) and the named consumer profile, only if absent
+    if [ -f "$CCSL_DIR/settings.json" ]; then
+      skip "ccstatusline settings.json exists — not overwriting"
+    else
+      cp "$SL_ASSETS/ccstatusline-settings.json" "$CCSL_DIR/settings.json"
+      ok "wrote $CCSL_DIR/settings.json"
+    fi
+    if [ -f "$CCSL_DIR/settings.consumer.json" ]; then
+      skip "settings.consumer.json exists — not overwriting"
+    else
+      cp "$SL_ASSETS/ccstatusline-settings.json" "$CCSL_DIR/settings.consumer.json"
+      ok "wrote $CCSL_DIR/settings.consumer.json"
+    fi
+    if [ -f "$CCSL_DIR/settings.enterprise.json" ]; then
+      skip "settings.enterprise.json exists — not overwriting"
+    else
+      cp "$SL_ASSETS/ccstatusline-settings.enterprise.json" "$CCSL_DIR/settings.enterprise.json"
+      ok "wrote $CCSL_DIR/settings.enterprise.json"
+    fi
+    # the launcher is always refreshed so bug fixes propagate on re-run
+    cp "$SL_ASSETS/profile-switch.sh" "$CCSL_DIR/profile-switch.sh"
+    chmod +x "$CCSL_DIR/profile-switch.sh"
+    ok "installed $CCSL_DIR/profile-switch.sh (auto-selects profile by account)"
+    case "$(detect_subscription)" in
+      enterprise|team) ok "detected enterprise/team account → enterprise profile active" ;;
+      "")              skip "account not detected yet (log in to Claude Code) → consumer profile by default" ;;
+      *)               ok "detected consumer (Pro/Max) account → consumer profile active" ;;
+    esac
   fi
   # also drop the no-Node alternative (handy if you'd rather not use ccstatusline)
   if [ -f "$HOME/.claude/statusline.sh" ]; then
@@ -360,22 +432,32 @@ if [ -d "$SL_ASSETS" ]; then
     ok "wrote ~/.claude/statusline.sh (alternative)"
   fi
   # Wire the status line into an EXISTING settings.json too — so re-running this
-  # script updates users who set up before the status line existed. Adds the key
-  # only if it's missing (your own statusLine, if any, is left untouched).
+  # script updates users who set up before the status line existed, AND upgrades
+  # older installs that still point at plain "ccstatusline" to the account-aware
+  # launcher. A custom statusLine you set yourself is left untouched.
   SETTINGS="$HOME/.claude/settings.json"
+  STATUSLINE_CMD='sh $HOME/.config/ccstatusline/profile-switch.sh'
   if [ -f "$SETTINGS" ] && command -v node >/dev/null 2>&1; then
-    if node -e 'process.exit(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).statusLine?0:1)' "$SETTINGS" 2>/dev/null; then
-      skip "settings.json already has a statusLine"
-    elif $DRY_RUN; then
-      skip "[dry-run] add statusLine to existing settings.json"
-    else
-      cp "$SETTINGS" "$SETTINGS.bak.$(date +%s)"
-      if node -e 'const f=process.argv[1],fs=require("fs");const s=JSON.parse(fs.readFileSync(f,"utf8"));s.statusLine={type:"command",command:"ccstatusline",padding:0};fs.writeFileSync(f,JSON.stringify(s,null,2)+"\n")' "$SETTINGS"; then
-        ok "added statusLine to your existing settings.json (backup made)"
-      else
-        warn "couldn't update settings.json — add a statusLine key manually"
-      fi
-    fi
+    action=$(node -e 'const f=process.argv[1],cmd=process.argv[2],fs=require("fs");
+let s;try{s=JSON.parse(fs.readFileSync(f,"utf8"))}catch(e){process.stdout.write("error");process.exit(0)}
+const cur=s.statusLine&&s.statusLine.command;
+process.stdout.write(!s.statusLine?"add":cur==="ccstatusline"?"upgrade":cur===cmd?"current":"keep")' "$SETTINGS" "$STATUSLINE_CMD" 2>/dev/null)
+    case "$action" in
+      current) skip "settings.json status line already account-aware" ;;
+      keep)    skip "settings.json has a custom statusLine — leaving it alone" ;;
+      add|upgrade)
+        if $DRY_RUN; then
+          skip "[dry-run] $action account-aware statusLine in settings.json"
+        else
+          cp "$SETTINGS" "$SETTINGS.bak.$(date +%s)"
+          if node -e 'const f=process.argv[1],cmd=process.argv[2],fs=require("fs");const s=JSON.parse(fs.readFileSync(f,"utf8"));s.statusLine={type:"command",command:cmd,padding:0};fs.writeFileSync(f,JSON.stringify(s,null,2)+"\n")' "$SETTINGS" "$STATUSLINE_CMD"; then
+            ok "wired account-aware statusLine into settings.json ($action, backup made)"
+          else
+            warn "couldn't update settings.json — add a statusLine key manually"
+          fi
+        fi ;;
+      *) warn "couldn't read settings.json to check statusLine" ;;
+    esac
   fi
 else
   skip "status-line assets not found (run setup.sh from the repo) — skipping"
