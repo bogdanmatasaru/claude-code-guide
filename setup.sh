@@ -94,6 +94,53 @@ ensure_line() {
   printf '%s\n' "$line" >> "$file"
 }
 
+ghostty_app_present()  { [ -d "/Applications/Ghostty.app" ]; }
+ghostty_cask_present() { brew list --cask ghostty >/dev/null 2>&1; }
+ghostty_present()      { ghostty_cask_present || ghostty_app_present; }
+
+attempt_ghostty_install() {
+  run "brew install --cask ghostty${1:+ $1}" || return 1
+  $DRY_RUN && return 0
+  ghostty_cask_present
+}
+
+install_ghostty() {
+  if ! $DRY_RUN && ! command -v brew >/dev/null 2>&1; then
+    warn "Ghostty skipped — Homebrew is unavailable"
+    return 1
+  fi
+  if ghostty_cask_present; then
+    ok "Ghostty already installed (brew)"
+    return 0
+  fi
+
+  local adopt_existing_app=""
+  if ghostty_app_present; then
+    skip "Ghostty.app present — adopting it into Homebrew"
+    adopt_existing_app="--adopt"
+  fi
+
+  if attempt_ghostty_install "$adopt_existing_app"; then
+    ok "Ghostty installed"
+    return 0
+  fi
+
+  warn "Ghostty install failed — refreshing Homebrew and retrying once"
+  run "brew update --quiet" || true
+  if attempt_ghostty_install "$adopt_existing_app"; then
+    ok "Ghostty installed after retry"
+    return 0
+  fi
+
+  if ghostty_app_present && attempt_ghostty_install "--force"; then
+    ok "Ghostty installed by replacing the existing app"
+    return 0
+  fi
+
+  warn "Ghostty could not be installed — install it from https://ghostty.org (Claude Code runs in any terminal)"
+  return 1
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Validation (used at the end and for --check)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -110,7 +157,7 @@ validate() {
   check "Homebrew (brew)"            command -v brew
   check "Node.js (node)"             command -v node
   check "Claude Code (claude)"       command -v claude
-  check "Ghostty (cask)"            bash -c 'brew list --cask ghostty'
+  check "Ghostty"                    ghostty_present
   check "Ghostty config exists"      test -f "$HOME/.config/ghostty/config"
   check "Claude config (~/.claude)"  test -d "$HOME/.claude"
   # Validate JSON if settings.json exists
@@ -219,7 +266,7 @@ brew_formula() {
 }
 
 step "Ghostty (recommended terminal for Claude Code)"
-brew_cask ghostty "Ghostty"
+install_ghostty
 
 step "Font — JetBrains Mono"
 brew_cask font-jetbrains-mono "JetBrains Mono"
