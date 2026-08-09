@@ -8,7 +8,8 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"*.md\" \"assets/**/*.md\""
+    "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"*.md\" \"assets/**/*.md\"",
+    "lint:stamps": "node scripts/check-verified-stamps.mjs"
   },
   "license": "MIT",
   "devDependencies": {

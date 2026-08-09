@@ -19,6 +19,14 @@ jobs:
       - name: Lint Markdown
         run: npm run lint:md
 
+      # Advisory on purpose. A stamp goes stale on a calendar date, with no code
+      # change — turning that into a red build would block unrelated PRs and
+      # train everyone to ignore CI, including the shellcheck job that guards
+      # the shipped scripts. It still annotates, and fails locally.
+      - name: Check verified stamps are current
+        continue-on-error: true
+        run: npm run lint:stamps
+
       - name: Build docs (validates internal links + Mermaid)
         run: npm run docs:build
 
@@ -26,9 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ShellCheck setup.sh & tests
+      - name: ShellCheck all shipped shell
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck -S warning install.sh setup.sh test/run-tests.sh
+          shellcheck -S warning install.sh setup.sh test/run-tests.sh assets/statusline/*.sh
       - name: Run setup.sh test suite
         run: ./test/run-tests.sh
