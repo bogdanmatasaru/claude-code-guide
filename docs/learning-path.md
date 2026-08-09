@@ -48,7 +48,7 @@ Goal: build the right mental model and learn the task recipes. **~1 hour.**
 
 ## Track 3: Optimize like a pro
 
-Goal: go faster, cheaper, and parallel. **~1 hour.**
+Goal: go faster, cheaper, and parallel. **~1.5 hours.**
 
 | # | Step | Time |
 |---|------|------|
@@ -58,6 +58,7 @@ Goal: go faster, cheaper, and parallel. **~1 hour.**
 | 4 | [MCP](./reference/mcp.md) — connect external tools (keep it lean) | 10 min |
 | 5 | [Parallel work with git worktrees](./guides/parallel-work-worktrees.md) + [headless & CI](./guides/headless-and-ci.md) | 10 min |
 | 6 | Steal from the [asset library](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets) — `CLAUDE.md` templates, commands, hooks | — |
+| 7 | [Another model](./guides/non-anthropic-endpoints.md) — point Claude Code at a different provider, and what that costs you | 30 min + provider signup |
 
 ---
 

@@ -97,6 +97,13 @@ Details → [models & effort](./reference/models-and-effort.md) · [cost](./guid
 > [!TIP]
 > Give Claude a check it can run — tests, a build, a screenshot. That's the difference between a session you watch and one you walk away from.
 
+## Another model
+
+| Want | Do |
+| --- | --- |
+| The whole session on another provider | A second config dir + base URL, key, `ANTHROPIC_MODEL`, the tier aliases and the two context numbers — [guide](./guides/non-anthropic-endpoints.md) |
+| Know what breaks first | [What stops working](./guides/non-anthropic-endpoints.md#what-stops-working) |
+
 ## Quick wins
 
 | Want to… | Do |

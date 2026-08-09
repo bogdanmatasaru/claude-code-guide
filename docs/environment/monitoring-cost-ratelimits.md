@@ -53,8 +53,8 @@ The setup handles this automatically: `setup.sh` installs a launcher (`profile-s
 
 `/usage`, `/cost`, and the usage bars on this page are backed by Anthropic's usage
 API, so none of them apply to a session running against a custom
-`ANTHROPIC_BASE_URL`. (`/context` is the exception — it reads the local context
-window and works anywhere.) Worse, the usage widgets don't blank out there: they fall back to
+`ANTHROPIC_BASE_URL`. (`/context` still renders, but on a custom endpoint the window size it
+measures against is the client's assumption, not your provider's real limit.) Worse, the usage widgets don't blank out there: they fall back to
 your Anthropic quota and render it beside the other provider's model. `setup.sh`
 installs a third profile that carries no usage widgets for exactly that reason. See
 [Run against a non-Anthropic endpoint](../guides/non-anthropic-endpoints.md).

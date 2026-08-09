@@ -39,6 +39,7 @@ Claude Code requires an account on a **paid plan** — the free Claude tier won'
 > Claude Code can also be pointed at a non-Anthropic endpoint that speaks the same
 > protocol. Anthropic doesn't support that configuration, and several features stop
 > working silently — see [Run against a non-Anthropic endpoint](../guides/non-anthropic-endpoints.md).
+> It is a way to add capacity beside a Claude plan, not a supported way to run Claude Code without one.
 
 Start a session and you'll be prompted to log in on first use:
 

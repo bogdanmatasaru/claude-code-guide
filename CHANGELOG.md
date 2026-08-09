@@ -28,7 +28,7 @@ Claude Code releases.
 - **Cheatsheet** — a single-page, Cmd-F-friendly reference.
 - **VitePress** documentation site generated from the same Markdown, with Mermaid
   diagrams and full-text search.
-- One-command `setup.sh` bootstrap (Ghostty + Claude Code) with a 64-assertion test
+- One-command `setup.sh` bootstrap (Ghostty + Claude Code) with a 69-assertion test
   suite, plus cost / rate-limit monitoring guidance.
 - Trust scaffolding: LICENSE, CONTRIBUTING, Code of Conduct, issue/PR templates, CI.
 - **Account-aware status line.** A launcher (`assets/statusline/profile-switch.sh`)
