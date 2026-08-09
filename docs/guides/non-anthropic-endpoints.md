@@ -23,9 +23,17 @@ One caveat the setup forces: it runs in a second config directory, which starts 
 
 ## From zero to working
 
+The shell commands below are written for macOS with zsh, which is what this repo's `setup.sh` assumes. Claude Code itself installs on macOS, Linux and Windows ([Installation](../getting-started/installation.md)) — the settings file and the variables are platform-independent, the shell commands are not, and the notes say where.
+
 If you just want it running, these six steps are the whole path. Each one links to the detail below.
 
-1. **Get a paid account with a provider that exposes an Anthropic-compatible API**, and create a key. "Anthropic-compatible" is how providers advertise it; if one has no Claude Code setup page of its own, assume it won't work. The [worked example](#worked-example-kimi-code) uses [Kimi Code](https://www.kimi.com/code/console), where keys come from the Console and the benefit is not on the free tier.
+1. **Get a paid account with a provider that exposes an Anthropic-compatible API**, and create a key. "Anthropic-compatible" is how providers advertise it; if one has no Claude Code setup page of its own, assume it won't work. The [worked example](#worked-example-kimi-code) uses [Kimi Code](https://www.kimi.com/code/console), where keys come from the Console.
+
+   Budget for this before you start. Kimi Code is a benefit inside a paid Kimi membership rather than a separate product — it shares that membership's quota — and the tier decides which models you may call and how much context each gets ([tier table below](#worked-example-kimi-code)). It is not on the free tier.
+
+   The tier also sets your quota, and quota is the part that bites: it refreshes every 7 days without rollover, there is a rolling 5-hour window on top, and the CLI, the IDE extension and third-party tools all draw on the same pool. Past that, "Extra Usage" bills by actual usage rather than flat rate — leave it off, or set a monthly cap, if you want this to stay a fixed cost.
+
+   Prices and plan names are on the [Kimi membership page](https://www.kimi.com/membership/pricing). This guide does not reproduce them: they move faster than the rest of this page, and at the time of writing that page carries a banner saying Kimi and Kimi Code benefits are about to be separated. Note the plan names there do not match the tier table below — that table comes from Kimi's Kimi Code documentation.
 
 2. **Make a second config directory**, so none of this touches your normal Claude setup — see [Keep it beside your Claude setup](#keep-it-beside-your-claude-setup-not-on-top-of-it):
 
@@ -33,11 +41,22 @@ If you just want it running, these six steps are the whole path. Each one links 
    mkdir -p ~/.claude-alt
    ```
 
-3. **Create `~/.claude-alt/settings.json`** and paste in the [example block](#worked-example-kimi-code) — `nano ~/.claude-alt/settings.json` works if you have no editor preference. Fill in three things: your key, **all six model IDs** for your plan, and the two context numbers — [the tier table](#worked-example-kimi-code) tells you which. Then lock it down, because it holds a key in plaintext:
+3. **Create `~/.claude-alt/settings.json`** and paste in the [example block](#worked-example-kimi-code):
+
+   ```bash
+   nano ~/.claude-alt/settings.json
+   ```
+
+   Paste the block, then fill in three things: your key, **all six model IDs** for your plan, and the two context numbers — [the tier table](#worked-example-kimi-code) tells you which. **If you have not run this repo's `setup.sh`, delete the `statusLine` block first** — it points at a script you do not have.
+
+   Save and quit (in `nano`: Ctrl+O, Enter, Ctrl+X), then lock the file down and check it parses:
 
    ```bash
    chmod 600 ~/.claude-alt/settings.json
+   python3 -m json.tool ~/.claude-alt/settings.json > /dev/null && echo "settings.json OK"
    ```
+
+   The `chmod` matters because the file holds a key in plaintext. The parse check matters because Claude Code ignores an unreadable settings file **silently** — you would launch against Anthropic and not be told.
 
 4. **Add an alias, to your shell startup file** so it survives new terminals:
 
@@ -46,14 +65,26 @@ If you just want it running, these six steps are the whole path. Each one links 
    source ~/.zshrc
    ```
 
-5. **Run `alt`.** A fresh config directory means a first-run wizard: theme, then a folder-trust prompt (answer yes for your own project), then a prompt asking whether to use the custom API key — **approve that one** ([what to do if you decline](#the-minimal-contract)). Then check it took effect:
+   On **bash**: `~/.bashrc` on Linux, but on macOS bash starts as a login shell, so use `~/.bash_profile`. On **fish**, use `$HOME` rather than `~` — fish only expands a tilde at the start of a word, so `~/.claude-alt` would stay literal:
+
+   ```fish
+   alias --save alt 'CLAUDE_CONFIG_DIR=$HOME/.claude-alt claude'
+   ```
+
+   On **Windows PowerShell** there is no alias that carries arguments; add a function to your profile instead:
+
+   ```powershell
+   function alt { $env:CLAUDE_CONFIG_DIR="$HOME\.claude-alt"; claude @args }
+   ```
+
+5. **`cd` into a project directory, then run `alt`.** A fresh config directory means a first-run wizard: theme, then a folder-trust prompt — answer yes, and this is why you `cd`-ed first, so you are not trusting your whole home directory — then a prompt asking whether to use the custom API key: **approve that one** ([what to do if you decline](#the-minimal-contract)). On macOS you will also see a startup warning that authentication may not work as expected. It is expected and harmless ([why](#keep-it-beside-your-claude-setup-not-on-top-of-it)). Then check it took effect:
 
    - `/status` should show an `Anthropic base URL` line with your provider's URL. That line is the check — it appears only when a base URL is set.
    - **Do not judge it by asking the model who it is.** Kimi documents that "even if the model name still appears as a Claude model, the actual calls are still made to the Kimi Code API", so a Claude-sounding answer is expected and proves nothing either way.
 
 6. **Read [what stops working](#what-stops-working)** before you rely on it. This is the step people skip.
 
-To undo any of it: use `claude` instead of `alt` — nothing about your normal setup was changed. To remove it entirely, `rm -rf ~/.claude-alt` and delete the alias line from `~/.zshrc`.
+To stop using it, just run `claude` instead of `alt`. To remove it entirely, delete the alias line from `~/.zshrc` and `rm -rf ~/.claude-alt` — that also deletes the alt session history, which is separate from your normal one. Note that if you additionally ran this repo's `setup.sh` for the status line, it may have modified `~/.claude/settings.json` — it does so only when adding a `statusLine` key or upgrading a bare `ccstatusline` call, and in that case it first copies the old file to `settings.json.bak.<epoch>`. If yours already routed through the launcher, or carried a custom `statusLine` it chose to leave alone, nothing was changed and there is no backup.
 
 ## Know what you're opting out of
 
@@ -82,7 +113,7 @@ That last row is a common cause of "the main chat works but subagents die instan
 > `ANTHROPIC_AUTH_TOKEN` takes effect immediately. `ANTHROPIC_API_KEY` does not: in an interactive session Claude Code prompts you once to approve or decline it, and remembers your answer ([authentication](https://code.claude.com/docs/en/authentication)). Approve it on first launch. A key you declined once is ignored silently and never re-prompts — re-enable it with **Use custom API key** in `/config`. In `-p` mode the key is always used, with no prompt.
 
 > [!WARNING]
-> Put these in a settings file `env` block, not shell exports. A settings-file value **wins over the shell** ([precedence](https://code.claude.com/docs/en/env-vars)), and a background session "doesn't inherit gateway endpoint variables such as `ANTHROPIC_BASE_URL` … from the shell that started the supervisor" ([agent view](https://code.claude.com/docs/en/agent-view)) — so shell-only config can leave background work running against your Claude subscription.
+> Put these in a settings file `env` block, not shell exports. A settings-file value **wins over the shell** ([precedence](https://code.claude.com/docs/en/env-vars)), and a background session "doesn't inherit gateway endpoint variables such as `ANTHROPIC_BASE_URL` … from the shell that started the supervisor" ([agent view](https://code.claude.com/docs/en/agent-view)) — so shell-only config can leave background work running against your Claude subscription. Anthropic's documented fix is a **project-level** `.claude/settings.json` `env` block — and if you do that, use `.claude/settings.local.json`, which is gitignored, not `.claude/settings.json`, which is committed; a key in a tracked settings file ends up in your repo history. A separate config directory is not ignored by background work — the same page says that with `CLAUDE_CONFIG_DIR` set, "the supervisor uses that directory instead of `~/.claude` and runs as a separate instance with its own sessions", and applies each session's directory, settings and credentials to its worker. What it does not spell out is whether a user-level `env` block there has the same precedence as a project one, so check `/status` inside a background session before trusting it. Note also that `ANTHROPIC_DEFAULT_*_MODEL` aliases *are* read from the dispatching shell while `ANTHROPIC_BASE_URL` is not — export the aliases without the base URL and a background worker sends your provider's model IDs to Anthropic.
 
 ## Keep it beside your Claude setup, not on top of it
 
@@ -115,13 +146,13 @@ Membership tier decides which models you may call and the context each one gets:
 | Moderato | `k3`, `k3-256k`, `kimi-for-coding` | 262144 for all three |
 | Allegretto and above | the above plus `kimi-for-coding-highspeed` | 1048576 for `k3`; 262144 for the rest |
 
-Note that `k3` is available on Moderato but capped at 262144 there — the 1M window is an Allegretto-and-above benefit, not a property of the model. Calling a model your plan doesn't include returns a `401` naming the tier you'd need.
+Note that `k3` is available on Moderato but capped at 262144 there — the 1M window is an Allegretto-and-above benefit, not a property of the model. *Observed on 2.1.226:* calling a model your plan doesn't include returns a `401` naming the tier you'd need.
 
 Below is the **Moderato** configuration. To adapt it:
 
 - **Andante**: replace all six `k3-256k` values with `kimi-for-coding`; the context numbers stay at `262144`.
 - **Moderato**: use it as-is.
-- **Allegretto and above**: use `k3[1m]` for all six, and set both context numbers to `1048576`, as Kimi's own published configuration does. *Observed on 2.1.226: the `[1m]` suffix wins over `CLAUDE_CODE_MAX_CONTEXT_TOKENS`, so the effective window is 1,000,000 either way, and `CLAUDE_CODE_AUTO_COMPACT_WINDOW` is capped at that same value.*
+- **Allegretto and above**: use `k3[1m]` for all six, and set both context numbers to `1048576`, as Kimi's own published configuration does. *Observed on 2.1.226: the `[1m]` suffix wins over `CLAUDE_CODE_MAX_CONTEXT_TOKENS`, so the window is 1,000,000 whether or not you also set the variable — the `1048576` you type is not the number you get.* `CLAUDE_CODE_AUTO_COMPACT_WINDOW` is separately documented as capped at `1000000` ([env vars](https://code.claude.com/docs/en/env-vars)), so it clamps to the same figure. Set both anyway, as Kimi does: they are what takes effect if you ever drop the suffix.
 
 ```json
 {
@@ -152,6 +183,8 @@ Below is the **Moderato** configuration. To adapt it:
 The `statusLine` line needs [this repo's](https://github.com/bogdanmatasaru/claude-code-guide) `setup.sh` to have been run once — it installs `ccstatusline` and the launcher into `~/.config/ccstatusline/`, which sits outside any config directory and is shared by both. If you have not run it, delete that block; everything else works without it.
 
 The two context values must match the limit for **your** plan and model. Kimi sets both in its own published configuration; without them Claude Code assumes a window that doesn't match the model (see [Context window](#context-window)). On the 1M configuration Kimi sets them to `1048576` — note that `CLAUDE_CODE_AUTO_COMPACT_WINDOW` is capped at `1000000` ([env vars](https://code.claude.com/docs/en/env-vars)), so that is the effective threshold there. Setting it also changes what your status line means: `used_percentage` still measures against the model's full window, so the context bar no longer tells you when compaction will fire.
+
+`CLAUDE_CODE_EFFORT_LEVEL` is `high` because K3 answers better with more reasoning; it also spends more of your quota per turn, so drop it to `medium` if you are optimising for throughput ([models & effort](../reference/models-and-effort.md)).
 
 `WebSearch` is denied because it runs on Anthropic's own backend and cannot work here; denying it stops the agent burning turns on a tool that never answers. **Leave `WebFetch` enabled** — it runs locally, works on any provider, and Anthropic names it as the substitute where server-side search is unavailable ([feature availability](https://code.claude.com/docs/en/feature-availability)). For real search, add an MCP server that exposes a search tool.
 
@@ -197,9 +230,11 @@ This is the part that can actively mislead you, so the setup handles it.
 
 When `rate_limits` is missing from the payload, [ccstatusline](https://github.com/sirmalloc/ccstatusline)'s usage widgets do not blank out. *Observed:* they fall back to Anthropic's usage API using the token in your keychain, so a session pointed elsewhere renders **your Anthropic quota** next to the other provider's model name — plausible, confident, and about a different account than the one answering.
 
-Account detection can't fix this, because you can hold a Max seat and still run a session against another endpoint. So [`profile-switch.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/assets/statusline/profile-switch.sh) decides on the provider first, reading `ANTHROPIC_BASE_URL` (and the `CLAUDE_CODE_USE_*` variables that Bedrock, Vertex and Foundry set) on every render, and selects a profile with no usage widgets at all. If that profile is missing it prints a hint rather than falling back.
+Account detection can't fix this, because you can hold a Max seat and still run a session against another endpoint. So [`profile-switch.sh`](https://github.com/bogdanmatasaru/claude-code-guide/blob/main/assets/statusline/profile-switch.sh) decides on the provider first, reading `ANTHROPIC_BASE_URL` (and the `CLAUDE_CODE_USE_*` variables that Bedrock, Vertex and Foundry set) on every render, and selects a profile with no usage widgets at all.
 
-That launcher and its profiles come from this repo's `setup.sh` — clone [claude-code-guide](https://github.com/bogdanmatasaru/claude-code-guide) and run `./setup.sh` from the clone root. It also repoints a `statusLine` that calls `ccstatusline` directly.
+*Observed on 2.1.226: Claude Code passes the settings-file `env` block into the status-line subprocess, so a base URL set in `settings.json` — never exported to the shell — is visible to the launcher. That is undocumented, and the whole mechanism rests on it.* **Confirm it once:** with the alt session running, the usage line should show no percentages at all. If it shows a 5h or 7d bar, those numbers are your Anthropic account, not your provider's — and `./setup.sh --check` will not catch it, because it only inspects the command string. If that profile is missing it prints a hint rather than falling back.
+
+That launcher and its profiles come from this repo's `setup.sh` — clone [claude-code-guide](https://github.com/bogdanmatasaru/claude-code-guide) and run `./setup.sh` from the clone root. It is written for macOS, and it is a full bootstrap rather than a status-line installer: Xcode Command Line Tools, Homebrew, Ghostty, a font, Node, `gh`, `jq` and `ccstatusline`, plus PATH and alias lines appended to `~/.zshrc` — [the full list](../environment/bootstrap-setup.md). Try `--dry-run` first, or `--no-shell` to leave your rc file alone. If you only want the status line, the [status-line assets](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/statusline) has a copy-five-files alternative. It also repoints a `statusLine` that calls `ccstatusline` directly.
 
 One caveat if you followed the two-directory arrangement above: **`setup.sh` and `--check` only ever read `~/.claude/settings.json`.** They install the launcher and its profiles, which is what the alt directory needs, but they will not wire it into `~/.claude-alt/settings.json` and `--check` will not notice if it is missing there — that block is yours to add. `./setup.sh --check` reports whether your **main** `settings.json` routes through the launcher — worth running, because a status line that never invokes the launcher is the one case where none of this protects you.
 
@@ -209,6 +244,7 @@ For real quota on another provider, use that provider's own console or CLI.
 
 | Symptom | Cause |
 | --- | --- |
+| `/status` shows no `Anthropic base URL` line at all | The settings file wasn't read — usually invalid JSON, which Claude Code ignores silently. Run `python3 -m json.tool ~/.claude-alt/settings.json` for the line and column of the error, and confirm the file is `settings.json` inside the directory `CLAUDE_CONFIG_DIR` points at |
 | Main chat works, subagents die instantly | Tier aliases not repointed — something asked for `sonnet` or `haiku` and it was sent literally |
 | `401` naming a plan or tier | Your subscription doesn't include that model, or you used a key from the provider's other platform |
 | Model ID "does not exist" | A Claude Code-only spelling sent to the raw API, or a model version name instead of an ID |
