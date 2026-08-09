@@ -19,9 +19,9 @@ you've burned and when it resets, without running `/usage`.
 
 [`ccstatusline`](https://github.com/sirmalloc/ccstatusline) is a configurable,
 multi-line status line for Claude Code (the 3-line display above). `setup.sh` installs
-it, ships **two profiles**, and wires a tiny launcher that auto-selects the right one
-by your account type (see [Account-aware profiles](#account-aware-profiles-enterprise--team)).
-To do it by hand:
+it, ships **three profiles**, and wires a tiny launcher that auto-selects the right one
+by provider and account type (see [Account-aware profiles](#account-aware-profiles-enterprise--team)
+and [Custom endpoints](#custom-endpoints-anthropic_base_url)). To do it by hand:
 
 ```bash
 npm install -g ccstatusline@2
@@ -29,6 +29,7 @@ mkdir -p ~/.config/ccstatusline
 cp ccstatusline-settings.json            ~/.config/ccstatusline/settings.json
 cp ccstatusline-settings.json            ~/.config/ccstatusline/settings.consumer.json
 cp ccstatusline-settings.enterprise.json ~/.config/ccstatusline/settings.enterprise.json
+cp ccstatusline-settings.custom-endpoint.json ~/.config/ccstatusline/settings.custom-endpoint.json
 cp profile-switch.sh                     ~/.config/ccstatusline/profile-switch.sh
 chmod +x ~/.config/ccstatusline/profile-switch.sh
 ```
@@ -70,6 +71,32 @@ block-cache) so the field is satisfied locally and both the timer **and** the cr
 render. Detection is cached for 5 min; `rm ~/.config/ccstatusline/.active-profile` forces
 a re-check after switching accounts.
 
+### Custom endpoints (`ANTHROPIC_BASE_URL`)
+
+Claude Code omits `rate_limits` from the status-line payload unless you are on a
+Claude.ai subscription. When it is missing, `ccstatusline` does **not** blank the usage
+widgets — it falls back to Anthropic's usage API using the token in your keychain. On a
+session pointed at another provider, that renders **your Anthropic quota** beside that
+provider's model name: plausible, confident, and about a different account than the one
+answering the session.
+
+Account detection cannot fix this — you can hold a Max seat and still run a session
+against another endpoint. So the launcher decides on the **provider first**, reading
+`ANTHROPIC_BASE_URL` on every render (never cached — it is a string comparison, not a
+network call), and selects `settings.custom-endpoint.json`, which carries no usage
+widgets at all.
+
+| Session | Profile | Line 2 shows |
+| --- | --- | --- |
+| custom `ANTHROPIC_BASE_URL` | `settings.custom-endpoint.json` | git / session / disk only — no usage widgets |
+
+If that profile is missing the launcher prints a hint and stops, rather than falling
+back to one that would show the wrong account's numbers. A blank field costs you
+nothing; a confident wrong percentage costs you a plan decision.
+
+For real quota on another provider, use that provider's own console or CLI. See
+[Run against a non-Anthropic endpoint](../../docs/guides/non-anthropic-endpoints.md).
+
 ### Option B — self-contained `statusline.sh` (no Node, just bash + jq + git)
 
 A single script with no dependencies beyond `jq` and `git`. Lighter, fully yours, but
@@ -92,6 +119,6 @@ cp statusline.sh ~/.claude/statusline.sh && chmod +x ~/.claude/statusline.sh
   `[API Error]` after rapid repeated renders — cosmetic, it self-heals on the next good
   fetch (cached 180s) and never affects actual Claude usage.
 - Check what's active any time: `./setup.sh --check` reports the detected account and
-  validates both profiles.
+  validates the profiles.
 - See [Monitor cost & rate limits](../../docs/environment/monitoring-cost-ratelimits.md)
   for the full picture, including `/usage` and `/context`.

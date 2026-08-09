@@ -211,6 +211,34 @@ validate() {
       "")              skip "Claude account: not detected (log in to Claude Code) → consumer profile by default" ;;
       *)               ok "Claude account: consumer (Pro/Max) → consumer profile (5h/7d usage)" ;;
     esac
+    # The custom-endpoint profile: ABSENT is informational (most people never use
+    # a custom base URL, and failing --check would break their CI). But PRESENT
+    # AND WRONG is a real failure — ccstatusline silently overwrites a config it
+    # cannot parse with its own defaults, and setup.sh will never restore it.
+    cep="$sl/settings.custom-endpoint.json"
+    if [ ! -f "$cep" ]; then
+      skip "custom-endpoint profile not installed — re-run ./setup.sh if you use a custom ANTHROPIC_BASE_URL"
+    elif ! command -v node >/dev/null 2>&1 || \
+         ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$cep" >/dev/null 2>&1; then
+      warn "custom-endpoint profile — INVALID JSON (delete it and re-run ./setup.sh)"; fails=$((fails+1))
+    elif grep -qE '"(session-usage|weekly-usage|weekly-sonnet-usage|weekly-opus-usage|reset-timer|weekly-reset-timer|extra-usage-remaining|extra-usage-utilization|block-timer|session-cost)"' "$cep"; then
+      warn "custom-endpoint profile contains a usage widget — it would show your ANTHROPIC quota"
+      warn "  on another provider's session. Delete it and re-run ./setup.sh."; fails=$((fails+1))
+    else
+      ok "custom-endpoint profile present and free of usage widgets"
+    fi
+    # The one setting that decides whether any of this runs at all.
+    st="$HOME/.claude/settings.json"
+    if [ -f "$st" ] && command -v node >/dev/null 2>&1; then
+      case "$(node -e 'const fs=require("fs");let s;try{s=JSON.parse(fs.readFileSync(process.argv[1],"utf8"))}catch(e){process.stdout.write("unreadable");process.exit(0)}
+const c=String((s.statusLine||{}).command||"");
+process.stdout.write(!s.statusLine?"none":c.includes("profile-switch.sh")?"routed":/ccstatusline/.test(c)?"direct":"other")' "$st" 2>/dev/null)" in
+        routed) ok "settings.json routes the status line through the launcher" ;;
+        direct) warn "settings.json calls ccstatusline directly — a non-Anthropic session would show your Anthropic quota"
+                warn "  point statusLine.command at profile-switch.sh (re-run ./setup.sh)"; fails=$((fails+1)) ;;
+        none|other|unreadable) skip "settings.json has no ccstatusline status line — nothing to route" ;;
+      esac
+    fi
   fi
   echo
   if [ "$fails" -eq 0 ]; then
@@ -457,7 +485,23 @@ if [ -d "$SL_ASSETS" ]; then
       cp "$SL_ASSETS/ccstatusline-settings.enterprise.json" "$CCSL_DIR/settings.enterprise.json"
       ok "wrote $CCSL_DIR/settings.enterprise.json"
     fi
-    # the launcher is always refreshed so bug fixes propagate on re-run
+    # Sessions on a custom ANTHROPIC_BASE_URL get a profile with no usage
+    # widgets at all: without rate_limits in the payload those widgets fall back
+    # to Anthropic's usage API and would render your Anthropic quota next to
+    # another provider's model. See profile-switch.sh for the full reasoning.
+    if [ -f "$CCSL_DIR/settings.custom-endpoint.json" ]; then
+      skip "settings.custom-endpoint.json exists — not overwriting"
+    else
+      cp "$SL_ASSETS/ccstatusline-settings.custom-endpoint.json" "$CCSL_DIR/settings.custom-endpoint.json"
+      ok "wrote $CCSL_DIR/settings.custom-endpoint.json"
+    fi
+    # The launcher is always refreshed so bug fixes propagate on re-run — but
+    # back up a divergent copy first, so local edits are never lost silently.
+    if [ -f "$CCSL_DIR/profile-switch.sh" ] && \
+       ! cmp -s "$SL_ASSETS/profile-switch.sh" "$CCSL_DIR/profile-switch.sh"; then
+      cp "$CCSL_DIR/profile-switch.sh" "$CCSL_DIR/profile-switch.sh.bak"
+      warn "backup made: $CCSL_DIR/profile-switch.sh.bak"
+    fi
     cp "$SL_ASSETS/profile-switch.sh" "$CCSL_DIR/profile-switch.sh"
     chmod +x "$CCSL_DIR/profile-switch.sh"
     ok "installed $CCSL_DIR/profile-switch.sh (auto-selects profile by account)"
@@ -480,18 +524,32 @@ if [ -d "$SL_ASSETS" ]; then
   fi
   # Wire the status line into an EXISTING settings.json too — so re-running this
   # script updates users who set up before the status line existed, AND upgrades
-  # older installs that still point at plain "ccstatusline" to the account-aware
-  # launcher. A custom statusLine you set yourself is left untouched.
+  # older installs that call ccstatusline directly to the account-aware launcher.
+  #
+  # Classify on substance, not string equality. A direct call is a direct call
+  # whether it was written as `ccstatusline`, `/opt/homebrew/bin/ccstatusline`,
+  # `npx -y ccstatusline@latest` or `bunx ccstatusline` — and every one of those
+  # renders your Anthropic quota on a session pointed at another provider. Only a
+  # direct call with NO extra arguments is rewritten; one carrying its own
+  # --config is a deliberate choice, so it is kept and flagged instead.
   SETTINGS="$HOME/.claude/settings.json"
   STATUSLINE_CMD='sh $HOME/.config/ccstatusline/profile-switch.sh'
   if [ -f "$SETTINGS" ] && command -v node >/dev/null 2>&1; then
     action=$(node -e 'const f=process.argv[1],cmd=process.argv[2],fs=require("fs");
 let s;try{s=JSON.parse(fs.readFileSync(f,"utf8"))}catch(e){process.stdout.write("error");process.exit(0)}
-const cur=s.statusLine&&s.statusLine.command;
-process.stdout.write(!s.statusLine?"add":cur==="ccstatusline"?"upgrade":cur===cmd?"current":"keep")' "$SETTINGS" "$STATUSLINE_CMD" 2>/dev/null)
+if(!s.statusLine){process.stdout.write("add");process.exit(0)}
+const cur=String(s.statusLine.command||"").trim();
+if(cur===cmd){process.stdout.write("current");process.exit(0)}
+if(cur.includes("profile-switch.sh")){process.stdout.write("current");process.exit(0)}
+const bare=cur.replace(/^(npx\s+(-y\s+)?|bunx\s+|bun\s+x\s+)/,"").trim();
+if(/^(\S*\/)?ccstatusline(@[\w.\-]+)?$/.test(bare)){process.stdout.write("upgrade");process.exit(0)}
+process.stdout.write(/ccstatusline/.test(cur)?"keep-direct":"keep")' "$SETTINGS" "$STATUSLINE_CMD" 2>/dev/null)
     case "$action" in
       current) skip "settings.json status line already account-aware" ;;
       keep)    skip "settings.json has a custom statusLine — leaving it alone" ;;
+      keep-direct)
+        warn "settings.json calls ccstatusline directly with its own arguments — leaving it alone"
+        warn "  on a non-Anthropic endpoint that renders YOUR Anthropic quota; point it at profile-switch.sh" ;;
       add|upgrade)
         if $DRY_RUN; then
           skip "[dry-run] $action account-aware statusLine in settings.json"

@@ -1,8 +1,8 @@
 #!/bin/sh
-# profile-switch.sh — account-aware ccstatusline launcher.
+# profile-switch.sh — provider- and account-aware ccstatusline launcher.
 #
-# Picks the right ccstatusline profile by your Claude account's subscriptionType,
-# then runs ccstatusline with it. Wire it into ~/.claude/settings.json:
+# Picks the right ccstatusline profile for the session, then runs ccstatusline
+# with it. Wire it into ~/.claude/settings.json:
 #   "statusLine": { "type": "command", "command": "sh $HOME/.config/ccstatusline/profile-switch.sh", "padding": 0 }
 #
 # WHY this exists
@@ -11,11 +11,31 @@
 #   Enterprise/Team seats return those buckets as null, so those widgets render
 #   "[Timeout]" (a pessimistic-lock label, not a real network timeout — the API
 #   answers 200 in <0.5s). Enterprise exposes a monthly pay-as-you-go bucket
-#   (extra_usage) instead. So we ship two profiles and auto-select.
+#   (extra_usage) instead. So we ship three profiles and auto-select.
 #
-#   - settings.enterprise.json : 5h block reset timer + extra-usage-remaining
-#   - settings.consumer.json   : the classic 5h/7d usage % + reset widgets
-#   - settings.json            : ccstatusline default, the fallback
+#   - settings.custom-endpoint.json : no usage widgets at all (see below)
+#   - settings.enterprise.json      : 5h block reset timer + extra-usage-remaining
+#   - settings.consumer.json        : the classic 5h/7d usage % + reset widgets
+#   - settings.json                 : ccstatusline default, the fallback
+#
+# CUSTOM ENDPOINTS (ANTHROPIC_BASE_URL) — checked FIRST, and it matters
+#   Claude Code omits rate_limits from the status-line payload unless you are on a
+#   Claude.ai subscription. When it is missing, ccstatusline does not blank the
+#   usage widgets: it falls back to api.anthropic.com/api/oauth/usage using the
+#   token in your macOS Keychain. On a session pointed at another provider that
+#   renders YOUR ANTHROPIC quota next to that provider's model name — numbers that
+#   are plausible, confident, and about a different account than the one answering.
+#   Account detection cannot fix this: you can hold a Max seat and still run a
+#   session against another endpoint. So provider is decided before account, from
+#   ANTHROPIC_BASE_URL (Claude Code exports the settings `env` block into
+#   status-line subprocesses), on every invocation and never cached — it is a
+#   string comparison, not a network call. If the profile is missing we print a
+#   hint rather than falling through to a profile with usage widgets: a blank
+#   field costs nothing, a wrong percentage costs you a plan decision.
+#
+#   Bedrock / Vertex / Foundry have no oauth usage either and set no base URL, so
+#   they are detected by their own CLAUDE_CODE_USE_* variables and get the same
+#   profile. Deciding to render nothing needs no knowledge of their payload shape.
 #
 # ENTERPRISE SHIM (verified)
 #   ccstatusline fetches usage ONCE per render and shares it across all Usage
@@ -34,11 +54,49 @@ set -u
 CONFIG_DIR="$HOME/.config/ccstatusline"
 ENTERPRISE="$CONFIG_DIR/settings.enterprise.json"
 CONSUMER="$CONFIG_DIR/settings.consumer.json"
+CUSTOM="$CONFIG_DIR/settings.custom-endpoint.json"
 CACHE="$CONFIG_DIR/.active-profile"
 TTL=300
 
 CCSTATUSLINE="$(command -v ccstatusline 2>/dev/null || echo /opt/homebrew/bin/ccstatusline)"
 PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
+
+# Provider gate. Returns 0 only when this session talks to Anthropic's own API
+# on a Claude.ai subscription — the one case where the usage widgets have data.
+#
+# Bedrock / Vertex / Foundry set no ANTHROPIC_BASE_URL, so a base-URL test alone
+# would wave them through to the consumer profile and render the Anthropic quota
+# beside a cloud-provider model. They get the custom-endpoint profile too.
+#
+# The base-URL match is exact, so a lookalike host (api.anthropic.com.example.net)
+# does not pass as first-party. Every other spelling — http://, uppercase, an
+# explicit :443, stray whitespace — falls to the custom profile, which loses
+# widgets rather than showing the wrong ones.
+is_first_party() {
+  [ -n "${CLAUDE_CODE_USE_BEDROCK:-}" ] && return 1
+  [ -n "${CLAUDE_CODE_USE_VERTEX:-}" ]  && return 1
+  [ -n "${CLAUDE_CODE_USE_FOUNDRY:-}" ] && return 1
+  [ -n "${CLAUDE_CODE_USE_ANTHROPIC_AWS:-}" ] && return 1
+  [ -n "${ANTHROPIC_BEDROCK_BASE_URL:-}" ]    && return 1
+  [ -n "${ANTHROPIC_VERTEX_BASE_URL:-}" ]     && return 1
+  case "${ANTHROPIC_BASE_URL:-}" in
+    "") return 0 ;;
+    https://api.anthropic.com|https://api.anthropic.com/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if ! is_first_party; then
+  if [ -f "$CUSTOM" ]; then
+    exec "$CCSTATUSLINE" --config "$CUSTOM"
+  fi
+  # Fail closed: never fall through. Bare ccstatusline reads
+  # ~/.config/ccstatusline/settings.json, which setup.sh installs as the consumer
+  # layout — usage widgets and all. Printing a hint costs nothing; rendering
+  # another account's numbers costs a plan decision.
+  printf 'custom endpoint · run ./setup.sh to install the status-line profile\n'
+  exit 0
+fi
 
 # Read subscriptionType from the macOS Keychain (only that field; never the token).
 # On non-macOS, fall back to ~/.claude/.credentials.json.
@@ -99,7 +157,7 @@ fi
 
 if [ -z "$cfg" ] || [ ! -f "$cfg" ]; then
   cfg=$(pick_profile)
-  [ -n "$cfg" ] && printf '%s' "$cfg" > "$CACHE" 2>/dev/null
+  [ -n "$cfg" ] && { printf '%s' "$cfg" > "$CACHE"; } 2>/dev/null
 fi
 
 if [ "$cfg" = "$ENTERPRISE" ] && [ -f "$cfg" ]; then

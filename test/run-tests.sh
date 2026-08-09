@@ -122,6 +122,21 @@ SH
 exit 1
 SH
 
+  # ccstatusline: report which profile the launcher chose, and nothing else.
+  # Without this the profile tests are vacuous — on a runner with no
+  # ccstatusline installed, "the output contains no usage widget" is true of
+  # every possible launcher, including a broken one.
+  cat > "$BIN/ccstatusline" <<'SH'
+#!/usr/bin/env bash
+cfg="DEFAULT"
+while [ $# -gt 0 ]; do
+  [ "$1" = "--config" ] && { cfg="$2"; shift; }
+  shift
+done
+cat >/dev/null 2>&1 || true
+echo "CCSTATUSLINE_CONFIG=$(basename "$cfg")"
+SH
+
   chmod +x "$BIN"/*
   # The real node is needed inside for setup.sh's JSON validation (validate()).
   # We symlink it in so we don't add /opt/homebrew/bin (which would shadow the brew mock).
@@ -200,6 +215,60 @@ assert "enterprise profile drops weekly-usage"  bash -c "! grep -qF weekly-usage
 assert_contains "launcher carries the enterprise shim"  "$CCSL/profile-switch.sh" "rate_limits"
 assert_contains "settings.json points at the launcher" "$FAKEHOME/.claude/settings.json" "profile-switch.sh"
 assert_out "--check reports the profile switcher"      "$OUT3" "profile switcher installed"
+
+# ─────────────────────────────────────────────────────────────────────────────
+section "4c. Custom-endpoint profile (ANTHROPIC_BASE_URL sessions)"
+# ─────────────────────────────────────────────────────────────────────────────
+# On a custom base URL Claude Code omits rate_limits, and ccstatusline's usage
+# widgets then fall back to Anthropic's usage API — rendering the wrong
+# account's numbers. This profile must therefore carry none of them, and the
+# launcher must decide on the provider before the account.
+CUSTOM_PROFILE="$CCSL/settings.custom-endpoint.json"
+assert "custom-endpoint profile installed"     test -f "$CUSTOM_PROFILE"
+assert "custom-endpoint profile valid JSON"    node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$CUSTOM_PROFILE"
+for widget in session-usage weekly-usage weekly-sonnet-usage weekly-opus-usage \
+              reset-timer weekly-reset-timer extra-usage-remaining \
+              extra-usage-utilization block-timer session-cost; do
+  assert "custom-endpoint profile drops $widget" \
+    bash -c "! grep -qF '\"$widget\"' '$CUSTOM_PROFILE'"
+done
+assert_contains "launcher gates on ANTHROPIC_BASE_URL" "$CCSL/profile-switch.sh" "ANTHROPIC_BASE_URL"
+assert_contains "launcher fails closed when the profile is missing" "$CCSL/profile-switch.sh" "custom endpoint · run ./setup.sh"
+assert_out "--check reports the custom-endpoint profile" "$OUT3" "custom-endpoint profile"
+
+# Which profile does the launcher actually hand to ccstatusline? The stub in
+# make_sandbox echoes it back, so these assertions fail if the provider gate is
+# removed — unlike "the output contains no usage widget", which is trivially
+# true wherever ccstatusline isn't installed.
+#
+# env -i keeps this hermetic: without it the launcher resolves the REAL
+# `security` binary and reads the developer's login keychain.
+STATUS_PAYLOAD='{"model":{"display_name":"test-model"},"session_id":"t","transcript_path":"/dev/null","cwd":"/tmp","workspace":{"current_dir":"/tmp"}}'
+launcher_profile() { # launcher_profile VAR=VALUE...
+  printf '%s' "$STATUS_PAYLOAD" | env -i HOME="$FAKEHOME" \
+    PATH="$SANDBOX_BIN:/usr/bin:/bin:/usr/sbin:/sbin" TERM=dumb "$@" \
+    sh "$CCSL/profile-switch.sh" 2>/dev/null
+}
+
+# Positive control: with no provider variables set, the usage-bearing consumer
+# profile MUST still be chosen. Without this, a launcher that always picked the
+# custom profile would pass every other assertion here.
+assert_out "first-party session gets the consumer profile" \
+  "$(launcher_profile)" "CCSTATUSLINE_CONFIG=settings.consumer.json"
+
+rm -f "$CCSL/.active-profile"
+for host in https://api.example.invalid/ https://api.anthropic.com.example.invalid/; do
+  assert_out "custom base URL gets the custom-endpoint profile ($host)" \
+    "$(launcher_profile ANTHROPIC_BASE_URL="$host")" "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
+  assert "no profile cache written for $host" test ! -f "$CCSL/.active-profile"
+done
+
+# Bedrock / Vertex / Foundry set no base URL and have no oauth usage either.
+for var in CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY; do
+  assert_out "$var gets the custom-endpoint profile" \
+    "$(launcher_profile "$var=1")" "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
+  assert "no profile cache written for $var" test ! -f "$CCSL/.active-profile"
+done
 
 # ─────────────────────────────────────────────────────────────────────────────
 section "5. --check on a broken environment detects the problem"
