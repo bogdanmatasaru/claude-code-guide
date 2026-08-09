@@ -49,6 +49,16 @@ The 5-hour / weekly **usage %** widgets read the `five_hour` / `seven_day` bucke
 
 The setup handles this automatically: `setup.sh` installs a launcher (`profile-switch.sh`) that detects your account's `subscriptionType` and swaps to an **enterprise profile** showing the 5-hour reset timer plus your **monthly credit remaining** — no `[Timeout]`. Consumer (Pro/Max) accounts keep the usage bars. Run `./setup.sh --check` to see which profile is active. Details: [status-line assets](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/statusline#account-aware-profiles-enterprise--team).
 
+### Sessions on a non-Anthropic endpoint
+
+`/usage`, `/cost`, and the usage bars on this page are backed by Anthropic's usage
+API, so none of them apply to a session running against a custom
+`ANTHROPIC_BASE_URL`. (`/context` is the exception — it reads the local context
+window and works anywhere.) Worse, the usage widgets don't blank out there: they fall back to
+your Anthropic quota and render it beside the other provider's model. `setup.sh`
+installs a third profile that carries no usage widgets for exactly that reason. See
+[Run against a non-Anthropic endpoint](../guides/non-anthropic-endpoints.md).
+
 ## What to do when you hit a limit
 
 When you're throttled, you have several quick levers:

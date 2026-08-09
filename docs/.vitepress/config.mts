@@ -64,7 +64,8 @@ export default defineConfig({
           { text: 'Refactor safely', link: '/guides/refactor-safely' },
           { text: 'Parallel work (worktrees)', link: '/guides/parallel-work-worktrees' },
           { text: 'Headless & CI', link: '/guides/headless-and-ci' },
-          { text: 'Optimize cost & context', link: '/guides/cost-optimization' }
+          { text: 'Optimize cost & context', link: '/guides/cost-optimization' },
+          { text: 'Non-Anthropic endpoints', link: '/guides/non-anthropic-endpoints' }
         ]
       },
       {

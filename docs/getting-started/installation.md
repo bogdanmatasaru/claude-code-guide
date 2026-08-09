@@ -35,6 +35,11 @@ Claude Code requires an account on a **paid plan** — the free Claude tier won'
 - **Claude Console** (API access with pre-paid credits)
 - **Amazon Bedrock, Google Vertex AI, or Microsoft Foundry** (enterprise cloud)
 
+> [!NOTE]
+> Claude Code can also be pointed at a non-Anthropic endpoint that speaks the same
+> protocol. Anthropic doesn't support that configuration, and several features stop
+> working silently — see [Run against a non-Anthropic endpoint](../guides/non-anthropic-endpoints.md).
+
 Start a session and you'll be prompted to log in on first use:
 
 ```bash
