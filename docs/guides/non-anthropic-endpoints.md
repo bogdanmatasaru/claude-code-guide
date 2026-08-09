@@ -25,7 +25,9 @@ One caveat the setup forces: it runs in a second config directory, which starts 
 
 The shell commands below are written for macOS with zsh, which is what this repo's `setup.sh` assumes. Claude Code itself installs on macOS, Linux and Windows ([Installation](../getting-started/installation.md)) — the settings file and the variables are platform-independent, the shell commands are not, and the notes say where.
 
-If you just want it running, these six steps are the whole path. Each one links to the detail below.
+**The short way:** run this repo's [`setup.sh`](https://github.com/bogdanmatasaru/claude-code-guide) and answer its last question. It offers to configure a second provider, asks for the base URL, key, model ID and context size, writes `~/.claude-alt/settings.json` with mode `600`, and adds the alias. It only offers this at an interactive terminal, never under `--dry-run`, and never over an existing config; the default answer is no, you have to type `yes`, and `--no-ask` skips the question outright — use that in any script, because no terminal test can distinguish a person from automation that allocates a pty. You still need to know your model ID and context size, which the [tier table](#worked-example-kimi-code) gives you.
+
+The six steps below are the same thing by hand, and worth reading either way — the script cannot tell you [what stops working](#what-stops-working).
 
 1. **Get a paid account with a provider that exposes an Anthropic-compatible API**, and create a key. "Anthropic-compatible" is how providers advertise it; if one has no Claude Code setup page of its own, assume it won't work. The [worked example](#worked-example-kimi-code) uses [Kimi Code](https://www.kimi.com/code/console), where keys come from the Console.
 

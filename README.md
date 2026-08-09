@@ -30,22 +30,26 @@ On a fresh Mac, go from zero to a fully-configured Claude Code + Ghostty with **
 curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash
 ```
 
-Then open Ghostty, type `claude`, and log in. That's it. → [Full setup guide](docs/environment/bootstrap-setup.md)
+Then open Ghostty, type `claude`, and log in. → [Full setup guide](docs/environment/bootstrap-setup.md)
+
+**Before you run it, so nothing is a surprise.** The script installs Xcode Command Line Tools, Homebrew, Ghostty, a font, Node, `gh`, `jq` and Claude Code; writes configs under `~/.claude` and `~/.config`; and appends PATH and alias lines to `~/.zshrc`. It is **interactive**: at the end it asks — optionally — whether you also want to configure a second, non-Anthropic model provider. **That step prompts for an API key and stores it in plaintext** at `~/.claude-alt/settings.json` (mode `600`). The default answer is no, declining changes nothing, and `--no-ask` skips the question entirely.
+
+Piping a script to `bash` runs code from the internet. See exactly what it would do first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash -s -- --dry-run
+```
 
 <details>
 <summary>Want to preview it first, or clone instead?</summary>
 
 ```bash
-# See what it would do, change nothing:
-curl -fsSL https://raw.githubusercontent.com/bogdanmatasaru/claude-code-guide/main/install.sh | bash -s -- --dry-run
-
-# Or clone and run manually (same result):
+# Clone and run manually (same result):
 git clone https://github.com/bogdanmatasaru/claude-code-guide.git
 cd claude-code-guide && ./setup.sh
 ```
 
-Piping a script to `bash` runs code from the internet — you can always read
-[`install.sh`](install.sh) and [`setup.sh`](setup.sh) first, or use `--dry-run`.
+You can also read [`install.sh`](install.sh) and [`setup.sh`](setup.sh) before running either.
 
 </details>
 

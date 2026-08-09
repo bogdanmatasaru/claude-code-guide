@@ -305,6 +305,146 @@ WRITES=$(find "$FAKEHOME" -type f 2>/dev/null | wc -l | tr -d ' ')
 assert "dry-run: zero files written"          test "$WRITES" -eq 0
 
 # ─────────────────────────────────────────────────────────────────────────────
+section "9. Second-provider setup never runs unattended"
+# ─────────────────────────────────────────────────────────────────────────────
+# It writes an inference endpoint and an API key, so it must happen only when a
+# human typed yes at a terminal. The sandbox has no TTY, which is the same shape
+# as CI and as any provisioning script — so every assertion here is checking that
+# nothing happened.
+# Its own sandbox and its own run: $FAKEHOME and $OUT1 belong to earlier
+# sections by now, and asserting "nothing was written" against a sandbox that
+# was never written to would pass for the wrong reason.
+make_sandbox
+OUT_ALT="$(run_setup 2>&1)"
+assert_out "the step runs at all"                 "$OUT_ALT" "Second provider"
+assert_out "and skips without an interactive terminal" \
+  "$OUT_ALT" "not an interactive terminal"
+assert "no alt config directory was created"      test ! -d "$FAKEHOME/.claude-alt"
+assert "no alt settings file was written"         test ! -f "$FAKEHOME/.claude-alt/settings.json"
+assert_not_out "no credential prompt was printed" "$OUT_ALT" "API key (input hidden)"
+assert "no alt alias reached the shell rc" \
+  bash -c "! grep -q 'claude-alt' '$FAKEHOME/.zshrc'"
+
+# --dry-run must announce the step and still write nothing.
+make_sandbox
+OUT_DRY_ALT="$(run_setup --dry-run 2>&1)"
+assert_out "dry-run announces the step"           "$OUT_DRY_ALT" "would offer to configure a second provider"
+assert "dry-run writes no alt config"             test ! -d "$FAKEHOME/.claude-alt"
+
+# Everything above runs without a TTY, so it can only prove the step stays shut.
+# Proving what it does when a human says yes — and that it then refuses to
+# overwrite — needs a real terminal, so drive one with a pty.
+if command -v python3 >/dev/null 2>&1; then
+  make_sandbox
+  PTY_OUT="$(python3 - "$SETUP" "$FAKEHOME" "$SANDBOX_BIN" "$BREW_STATE" <<'PYEOF'
+import os, pty, sys, time, select, json, stat
+
+setup, home, sbin, brew_state = sys.argv[1:5]
+env = {"HOME": home, "PATH": sbin + ":/usr/bin:/bin:/usr/sbin:/sbin",
+       "TERM": "dumb", "BREW_STATE": brew_state}
+
+def run(answers):
+    pid, fd = pty.fork()
+    if pid == 0:
+        os.execve("/bin/bash", ["bash", setup], env)
+    out, i, deadline = b"", 0, time.time() + 240
+    while time.time() < deadline:
+        r, _, _ = select.select([fd], [], [], 1.0)
+        if r:
+            try: chunk = os.read(fd, 8192)
+            except OSError: break
+            if not chunk: break
+            out += chunk
+            if i < len(answers) and answers[i][0] in out:
+                time.sleep(0.2); os.write(fd, answers[i][1]); i += 1
+        elif i >= len(answers):
+            break
+    try: os.waitpid(pid, os.WNOHANG)
+    except Exception: pass
+    return out.decode("utf-8", "replace")
+
+first = run([(b"Type 'yes'", b"yes\n"), (b"Base URL", b"\n"),
+             (b"API key", b"sk-PTY-CANARY\n"), (b"Model ID", b"\n"),
+             (b"Context window", b"\n"), (b"Alias to launch", b"\n")])
+
+path = os.path.join(home, ".claude-alt", "settings.json")
+res = []
+res.append(("prompted for a key", "API key (input hidden)" in first))
+res.append(("key never echoed", "sk-PTY-CANARY" not in first))
+if os.path.exists(path):
+    d = json.load(open(path))
+    e = d.get("env", {})
+    models = {v for k, v in e.items() if k.endswith("_MODEL") or k == "ANTHROPIC_MODEL"}
+    res.append(("wrote the alt settings file", True))
+    res.append(("file mode is 600", oct(stat.S_IMODE(os.stat(path).st_mode)) == "0o600"))
+    res.append(("key stored verbatim", e.get("ANTHROPIC_API_KEY") == "sk-PTY-CANARY"))
+    res.append(("all six model slots set", len(models) == 1 and len([k for k in e if k.endswith("_MODEL") or k == "ANTHROPIC_MODEL"]) == 6))
+    res.append(("WebSearch denied", d.get("permissions", {}).get("deny") == ["WebSearch"]))
+    res.append(("alias reached the shell rc", "claude-alt" in open(os.path.join(home, ".zshrc")).read()))
+else:
+    res.append(("wrote the alt settings file", False))
+
+# Second run, same answers: the guard must refuse and leave the file byte-identical.
+before = open(path).read() if os.path.exists(path) else ""
+second = run([(b"Type 'yes'", b"yes\n")])
+after = open(path).read() if os.path.exists(path) else ""
+# Assert on the message the guard itself prints, not on the absence of a later
+# prompt: a broken guard that re-prompts and then stalls on the next question
+# would satisfy the weaker test without the guard existing at all.
+res.append(("re-run reports the config already exists",
+            "second provider already configured" in second))
+res.append(("re-run never reaches the key prompt", "API key (input hidden)" not in second))
+res.append(("re-run leaves the file untouched", before == after and before != ""))
+
+# Hostile inputs. Each of these could otherwise close the env object and append a
+# top-level hooks block — a shell command run at every session start, in a file
+# that still parses as JSON and still holds the right key.
+for label, answers in [
+    ("a base URL carrying a quote is rejected",
+     [(b"Type 'yes'", b"yes\n"),
+      (b"Base URL", b'https://a.test/"},"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"echo PWNED"}]}]},"env":{"X":"1\n')]),
+    ("a model ID carrying a quote is rejected",
+     [(b"Type 'yes'", b"yes\n"), (b"Base URL", b"\n"), (b"API key", b"sk-X\n"),
+      (b"Model ID", b'k3","evil":"yes\n')]),
+    ("an alias starting with a dash is rejected",
+     [(b"Type 'yes'", b"yes\n"), (b"Base URL", b"\n"), (b"API key", b"sk-X\n"),
+      (b"Model ID", b"\n"), (b"Context window", b"\n"), (b"Alias to launch", b"-n\n")]),
+]:
+    if os.path.exists(path):
+        os.remove(path)
+    out = run(answers)
+    wrote = os.path.exists(path)
+    res.append((label, ("aborting" in out) and not wrote))
+
+# A planted symlink must not be followed. [ -f ] is false for a dangling link, so
+# without an explicit check the already-configured guard is skipped and the key
+# is written to the link target instead — anywhere the user can write.
+import shutil as _sh
+alt_dir = os.path.dirname(path)
+_sh.rmtree(alt_dir, ignore_errors=True)
+os.makedirs(alt_dir, exist_ok=True)
+victim = os.path.join(home, "VICTIM-should-not-exist")
+os.symlink(victim, path)
+out = run([(b"Type 'yes'", b"yes\n"), (b"Base URL", b"\n"), (b"API key", b"sk-X\n"),
+           (b"Model ID", b"\n"), (b"Context window", b"\n"), (b"Alias to launch", b"\n")])
+res.append(("a symlinked settings.json is refused", "symlink" in out))
+res.append(("no key written through the symlink", not os.path.exists(victim)))
+
+for name, okness in res:
+    print(("PTYPASS " if okness else "PTYFAIL ") + name)
+PYEOF
+)"
+  while IFS= read -r line; do
+    case "$line" in
+      PTYPASS\ *) printf "  ${GREEN}PASS${RESET} %s\n" "${line#PTYPASS }"; PASS=$((PASS+1)) ;;
+      PTYFAIL\ *) printf "  ${RED}FAIL${RESET} %s\n" "${line#PTYFAIL }"; FAIL=$((FAIL+1)) ;;
+    esac
+  done <<< "$PTY_OUT"
+else
+  printf "  ${DIM}.... python3 missing — skipping the interactive pty tests${RESET}\n"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 section "Result"
 # ─────────────────────────────────────────────────────────────────────────────
 printf "\n${BOLD}%d PASS, %d FAIL${RESET}\n" "$PASS" "$FAIL"

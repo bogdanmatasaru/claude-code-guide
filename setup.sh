@@ -10,6 +10,7 @@
 #   ./setup.sh --dry-run    # show what it would do, change nothing
 #   ./setup.sh --check      # only validate an existing environment (no install)
 #   ./setup.sh --no-shell   # don't add aliases/PATH to the shell rc
+#   ./setup.sh --no-ask     # skip the optional second-provider question
 #   ./setup.sh --help
 #
 # After running: open Ghostty, type `claude`, log in. Done.
@@ -26,14 +27,16 @@ set -uo pipefail
 DRY_RUN=false
 CHECK_ONLY=false
 ADD_SHELL_ALIASES=true
+ASK_ALT_PROVIDER=true
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run)  DRY_RUN=true ;;
     --check)    CHECK_ONLY=true ;;
     --no-shell) ADD_SHELL_ALIASES=false ;;
+    --no-ask)   ASK_ALT_PROVIDER=false ;;
     -h|--help)
-      sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "Unknown option: $arg (see --help)"; exit 1 ;;
   esac
@@ -590,6 +593,205 @@ EOF
     ok "aliases added (cc, ccc, ccp) — active in your next terminal"
   fi
 fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Optional: a second provider alongside Claude (interactive, opt-in)
+# ─────────────────────────────────────────────────────────────────────────────
+# Claude Code can be pointed at any endpoint that speaks the Anthropic protocol.
+# This writes a SECOND config directory so your Claude setup is never touched,
+# and adds an alias to launch it. See docs/guides/non-anthropic-endpoints.md.
+#
+# WHY THIS IS INTERACTIVE AND READS /dev/tty
+#   This script is distributed by `curl … | bash`, where stdin is the script
+#   itself — a plain `read` would eat the remaining bytes. Reading /dev/tty gets
+#   the real terminal in that case, and simply fails where there is no terminal
+#   (CI, the test suite, a provisioning script), which is exactly when a prompt
+#   for a credential must not appear. Nothing here runs unattended: no terminal
+#   means skipped, --dry-run means skipped, and the default answer is no.
+#
+#   Writing an inference endpoint and a key into someone's config without them
+#   asking would make a single bad commit here a way to redirect other people's
+#   traffic. So this never happens without a typed yes.
+setup_alt_provider() {
+  local dir="$HOME/.claude-alt" settings base key model ctx alias_name reply old_umask
+
+  if ! $ASK_ALT_PROVIDER; then
+    skip "--no-ask given — not offering the second-provider setup"
+    return 0
+  fi
+  if $DRY_RUN; then
+    skip "[dry-run] would offer to configure a second provider"
+    return 0
+  fi
+  # `[ -r /dev/tty ]` looks like an interactivity test and is not one: /dev/tty is
+  # crw-rw-rw-, so the permission bit is always set even where the device cannot
+  # be opened. Open it for real instead, and require BOTH that the open succeeds
+  # and that stdout is a terminal. That covers the `curl … | bash` case, where
+  # only stdin is the pipe, and stays out of the way when output is redirected.
+  #
+  # It does NOT defeat automation that deliberately allocates a pty (`script(1)`),
+  # and nothing based on file descriptors can. `--no-ask` is the guarantee for
+  # unattended runs; the docs say so rather than claiming more than this enforces.
+  if [ ! -t 1 ] || ! : < /dev/tty 2>/dev/null; then
+    skip "not an interactive terminal — skipping the optional second-provider setup"
+    return 0
+  fi
+
+  # Refuse to follow a symlink anywhere on this path. `[ -f ]` is false for a
+  # dangling symlink, so without this a planted link would skip the
+  # already-configured guard and write the key to the link's target instead.
+  settings="$dir/settings.json"
+  if [ -L "$dir" ] || [ -L "$settings" ]; then
+    warn "$dir or its settings.json is a symlink — refusing to write a credential through it"
+    return 0
+  fi
+  if [ -e "$settings" ]; then
+    skip "second provider already configured ($settings) — not touching it"
+    return 0
+  fi
+
+  printf "\n  Claude Code can also run against a non-Anthropic endpoint, in a separate\n"
+  printf "  config directory, so your Claude setup stays exactly as it is.\n"
+  printf "  You will need an API key from that provider. Docs: docs/guides/non-anthropic-endpoints.md\n"
+  # Drain anything already sitting in the terminal buffer, so a stray keystroke
+  # from the long Homebrew phase cannot be consumed as the answer to this.
+  while read -r -t 0.01 -n 1 _ < /dev/tty 2>/dev/null; do :; done
+  # Full word, not a bare y: this writes a credential, so it should not be one
+  # keystroke away. -t 60 is a backstop; a timeout reads as no.
+  printf "  Set one up now? Type 'yes' to continue: "
+  read -r -t 60 reply < /dev/tty || { printf "\n"; skip "no answer — skipped"; return 0; }
+  case "$reply" in
+    [yY][eE][sS]) ;;
+    *) skip "skipped — run ./setup.sh again any time to set it up"; return 0 ;;
+  esac
+
+  printf "  Base URL [https://api.kimi.com/coding/]: "
+  read -r -t 120 base < /dev/tty || { printf "\n"; warn "timed out — nothing written"; return 0; }
+  base="${base:-https://api.kimi.com/coding/}"
+  # Every field below is interpolated into a file Claude Code executes behaviour
+  # from, so each is validated against a strict allowlist. A base URL carrying a
+  # quote could close the env object and append a top-level hooks block — a shell
+  # command run at every session start, in a file that still parses as JSON and
+  # still holds the right key, so nothing would look wrong.
+  case "$base" in
+    https://*) ;;
+    *) warn "base URL must start with https:// — aborting, nothing written"; return 0 ;;
+  esac
+  case "$base" in
+    *[!A-Za-z0-9:/._~%?\#\[\]@!\$\&\'\(\)\*+,\;=-]*)
+      warn "base URL contains characters that are not valid in a URL — aborting"; return 0 ;;
+  esac
+
+  # No echo: a key must never land in the scrollback or a screenshot. If stty
+  # cannot turn echo off we say so rather than letting the key be typed in the
+  # clear. The trap covers every way out of the prompt, including a closed
+  # terminal (HUP), so echo is never left off.
+  printf "  API key (input hidden): "
+  if ! stty -echo < /dev/tty 2>/dev/null; then
+    printf "\n"; warn "cannot hide input on this terminal — not asking for a key here"
+    warn "  use the manual path instead: docs/guides/non-anthropic-endpoints.md"
+    return 0
+  fi
+  trap 'stty echo < /dev/tty 2>/dev/null; printf "\n"; exit 130' INT TERM HUP
+  read -r -t 120 key < /dev/tty || key=""
+  stty echo < /dev/tty 2>/dev/null
+  trap - INT TERM HUP
+  printf "\n"
+  key="${key%$'\r'}"
+  case "$key" in
+    "") warn "no key given — aborting, nothing written"; return 0 ;;
+    *[![:print:]]*) warn "key contains a control character — aborting rather than writing a broken file"; return 0 ;;
+  esac
+
+  printf "  Model ID [k3-256k]: "
+  read -r -t 120 model < /dev/tty || { printf "\n"; warn "timed out — nothing written"; return 0; }
+  model="${model:-k3-256k}"
+  case "$model" in
+    ''|*[!A-Za-z0-9._\[\]-]*)
+      warn "model ID may only contain letters, digits, dot, underscore, dash or square brackets — aborting"; return 0 ;;
+  esac
+
+  printf "  Context window in tokens [262144]: "
+  read -r -t 120 ctx < /dev/tty || { printf "\n"; warn "timed out — nothing written"; return 0; }
+  ctx="${ctx:-262144}"
+  case "$ctx" in
+    ''|*[!0-9]*) warn "context window must be a whole number — aborting, nothing written"; return 0 ;;
+  esac
+
+  printf "  Alias to launch it [alt]: "
+  read -r -t 120 alias_name < /dev/tty || { printf "\n"; warn "timed out — nothing written"; return 0; }
+  alias_name="${alias_name:-alt}"
+  # Must start with a letter or underscore: a leading dash parses as an option to
+  # `alias` and would print an error in every future interactive shell.
+  case "$alias_name" in
+    ''|[!a-zA-Z_]*|*[!a-zA-Z0-9_-]*)
+      warn "alias must start with a letter and contain only letters, digits, dash or underscore — aborting"; return 0 ;;
+  esac
+
+  # umask in THIS shell, not a subshell: a subshell umask does not apply to the
+  # file created after it, so the settings file would exist world-readable for
+  # the moment between creation and chmod — long enough for a local process to
+  # hold an fd open and read the key once it is written into the same inode.
+  old_umask=$(umask); umask 077
+  mkdir -p "$dir" || { umask "$old_umask"; warn "could not create $dir"; return 0; }
+  chmod 700 "$dir" 2>/dev/null
+
+  # Build the JSON with an encoder rather than a heredoc, so no input can alter
+  # the file's structure even if the validation above ever misses a case.
+  if ! command -v node >/dev/null 2>&1; then
+    umask "$old_umask"
+    warn "node is required to write this config safely — skipping"
+    warn "  set it up by hand instead: docs/guides/non-anthropic-endpoints.md"
+    return 0
+  fi
+  local statusline_arg="no"
+  [ -f "$HOME/.config/ccstatusline/profile-switch.sh" ] && statusline_arg="yes"
+  if ! ALT_KEY="$key" node -e '
+const [out, base, model, ctx, wantStatusLine] = process.argv.slice(1);
+const s = {
+  env: {
+    ANTHROPIC_BASE_URL: base,
+    ANTHROPIC_API_KEY: process.env.ALT_KEY,
+    ANTHROPIC_MODEL: model,
+    ANTHROPIC_DEFAULT_OPUS_MODEL: model,
+    ANTHROPIC_DEFAULT_SONNET_MODEL: model,
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: model,
+    ANTHROPIC_DEFAULT_FABLE_MODEL: model,
+    CLAUDE_CODE_SUBAGENT_MODEL: model,
+    CLAUDE_CODE_EFFORT_LEVEL: "high",
+    CLAUDE_CODE_MAX_CONTEXT_TOKENS: ctx,
+    CLAUDE_CODE_AUTO_COMPACT_WINDOW: ctx,
+  },
+  permissions: { deny: ["WebSearch"] },
+};
+if (wantStatusLine === "yes") {
+  s.statusLine = { type: "command", command: "sh $HOME/.config/ccstatusline/profile-switch.sh", padding: 0 };
+}
+require("fs").writeFileSync(out, JSON.stringify(s, null, 2) + "\n", { mode: 0o600, flag: "wx" });
+' "$settings" "$base" "$model" "$ctx" "$statusline_arg" 2>/dev/null; then
+    umask "$old_umask"
+    rm -f "$settings"
+    warn "could not write $settings — nothing left behind"
+    return 0
+  fi
+  umask "$old_umask"
+  chmod 600 "$settings" 2>/dev/null
+  ok "wrote $settings (mode 600)"
+  printf "     it also sets all six model aliases to %s, denies WebSearch (it cannot\n" "$model"
+  printf "     work off Anthropic's backend), and sets effort to high — which answers\n"
+  printf "     better and spends more of your provider quota. Edit the file to change them.\n"
+
+  if $ADD_SHELL_ALIASES; then
+    ensure_line "$SHELL_RC" "alias $alias_name='CLAUDE_CONFIG_DIR=\$HOME/.claude-alt claude'"
+    ok "alias '$alias_name' added to $SHELL_RC — active in your next terminal"
+  else
+    ok "add this to your shell rc: alias $alias_name='CLAUDE_CONFIG_DIR=\$HOME/.claude-alt claude'"
+  fi
+  warn "that model ID and context size must match your provider's plan — see docs/guides/non-anthropic-endpoints.md"
+}
+
+step "Second provider (optional)"
+setup_alt_provider
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Validation + final

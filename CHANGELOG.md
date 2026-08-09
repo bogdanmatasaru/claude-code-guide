@@ -7,6 +7,17 @@ Claude Code releases.
 ## [Unreleased]
 
 ### Added
+- **`setup.sh` can configure a second provider**, as an opt-in question at the end
+  of the run: base URL, key, model ID, context size, then it writes
+  `~/.claude-alt/settings.json` (mode `600`, key never echoed) and an alias. It is
+  offered only at an interactive terminal — the script ships via `curl | bash`, so
+  it reads `/dev/tty` rather than stdin and additionally requires stdout to be a
+  terminal — which keeps it out of the way under `--dry-run`, redirected output and
+  most CI. It cannot distinguish a person from automation that allocates a pty, so
+  `--no-ask` exists as the actual guarantee. Answering requires typing `yes`; every
+  input is validated against an allowlist and the file is written through a JSON
+  encoder, so a pasted base URL or model ID cannot inject a `hooks` block; symlinks
+  are refused; and an existing config is never touched.
 - **Non-Anthropic endpoints guide** — how to point Claude Code at another provider
   with `ANTHROPIC_BASE_URL`, which features stop working (cited), and the tier-alias
   variables that most setups miss. Worked example: Kimi Code.
@@ -28,7 +39,7 @@ Claude Code releases.
 - **Cheatsheet** — a single-page, Cmd-F-friendly reference.
 - **VitePress** documentation site generated from the same Markdown, with Mermaid
   diagrams and full-text search.
-- One-command `setup.sh` bootstrap (Ghostty + Claude Code) with a 69-assertion test
+- One-command `setup.sh` bootstrap (Ghostty + Claude Code) with a 93-assertion test
   suite, plus cost / rate-limit monitoring guidance.
 - Trust scaffolding: LICENSE, CONTRIBUTING, Code of Conduct, issue/PR templates, CI.
 - **Account-aware status line.** A launcher (`assets/statusline/profile-switch.sh`)
