@@ -65,6 +65,7 @@ export default defineConfig({
           { text: 'Parallel work (worktrees)', link: '/guides/parallel-work-worktrees' },
           { text: 'Headless & CI', link: '/guides/headless-and-ci' },
           { text: 'Optimize cost & context', link: '/guides/cost-optimization' },
+          { text: 'Tune auto-compaction', link: '/guides/auto-compact' },
           { text: 'Non-Anthropic endpoints', link: '/guides/non-anthropic-endpoints' }
         ]
       },

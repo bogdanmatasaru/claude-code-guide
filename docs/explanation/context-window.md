@@ -40,6 +40,12 @@ Both free up space, but they do different things:
 > [!NOTE]
 > **The prompt-cache nuance.** Claude Code caches your context for about **5 minutes**. Inside that warm window, `/compact` is cheap because most of the conversation is still cached. Outside it (after a long pause), the cache is cold either way — so if you no longer need the history, `/clear` is the cheaper choice. Rule of thumb: compact to *continue* a task, clear to *abandon* one.
 
+## Auto-compaction
+
+A full window doesn't end the session: as the conversation approaches the limit, Claude Code **compacts automatically** — the same summarization as `/compact`, run for you. Project-root `CLAUDE.md` and auto memory are re-injected from disk afterward, but path-scoped rules and nested `CLAUDE.md` files are summarized away until a matching file is read again.
+
+How full the window gets before that pass runs is configurable — the *auto-compact window* — via `/autocompact`, the `--autocompact` flag, or `CLAUDE_CODE_AUTO_COMPACT_WINDOW`. See [Tune auto-compaction](../guides/auto-compact.md).
+
 ## Protect context with subagents
 
 When a task requires reading **many files** — a broad investigation, a wide search — that reading can flood your main context. A **subagent** does the work in its **own** context window and returns only a summary:

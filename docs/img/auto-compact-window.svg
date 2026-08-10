@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 300" width="860" height="300" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Chart of context size over the turns of a long session. Without compaction the context grows linearly toward 800k tokens, so the shaded area under the curve — the total tokens processed, i.e. the cost — grows quadratically. With auto-compact set to 150k the context follows a sawtooth: it climbs to 150k, drops to a summary, and climbs again, keeping the shaded area roughly four times smaller.">
+  <defs>
+    <marker id="axis-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#9aa0ad"/>
+    </marker>
+    <style>
+      .axis { stroke:#9aa0ad; stroke-width:1.5; fill:none; }
+      .grid { stroke:#9aa0ad; stroke-width:1; opacity:0.25; }
+      .glbl { fill:#9aa0ad; font-size:12px; }
+      .threshold { stroke:#e8a45c; stroke-width:1.5; stroke-dasharray:5 4; }
+      .tlbl { fill:#e8a45c; font-size:13px; font-weight:600; }
+      .raw { stroke:#9aa0ad; stroke-width:2.5; fill:none; }
+      .rawfill { fill:#9aa0ad; opacity:0.12; }
+      .rawlbl { fill:#9aa0ad; font-size:14px; }
+      .saw { stroke:#8b5cf6; stroke-width:2.5; fill:none; }
+      .sawfill { fill:#8b5cf6; opacity:0.15; }
+      .sawlbl { fill:#8b5cf6; font-size:14px; font-weight:600; }
+      .note { fill:#9aa0ad; font-size:13px; }
+    </style>
+  </defs>
+
+  <!-- gridlines + y labels: 0..800k over 230px -->
+  <line class="grid" x1="60" y1="196" x2="840" y2="196"/>
+  <line class="grid" x1="60" y1="142" x2="840" y2="142"/>
+  <line class="grid" x1="60" y1="88"  x2="840" y2="88"/>
+  <line class="grid" x1="60" y1="34"  x2="840" y2="34"/>
+  <text class="glbl" x="52" y="200" text-anchor="end">200k</text>
+  <text class="glbl" x="52" y="146" text-anchor="end">400k</text>
+  <text class="glbl" x="52" y="92"  text-anchor="end">600k</text>
+  <text class="glbl" x="52" y="38"  text-anchor="end">800k</text>
+  <text class="glbl" x="52" y="254" text-anchor="end">0</text>
+
+  <!-- axes -->
+  <line class="axis" x1="60" y1="250" x2="848" y2="250" marker-end="url(#axis-arrow)"/>
+  <line class="axis" x1="60" y1="250" x2="60"  y2="12"  marker-end="url(#axis-arrow)"/>
+  <text class="glbl" x="70" y="24">context size</text>
+
+  <!-- threshold: 150k -->
+  <line class="threshold" x1="60" y1="209" x2="840" y2="209"/>
+  <text class="tlbl" x="838" y="200" text-anchor="end">auto-compact window = 150k</text>
+
+  <!-- no compaction: linear climb to ~775k -->
+  <polygon class="rawfill" points="60,245 840,40 840,250 60,250"/>
+  <line class="raw" x1="60" y1="245" x2="840" y2="40"/>
+  <text class="rawlbl" x="560" y="98" text-anchor="middle">no compaction — every turn re-sends the full history</text>
+
+  <!-- compacting at 150k: sawtooth, each drop is a summary -->
+  <polygon class="sawfill" points="60,245 255,209 255,236 403,209 403,236 551,209 551,236 699,209 699,236 840,224 840,250 60,250"/>
+  <path class="saw" d="M60,245 L255,209 L255,236 L403,209 L403,236 L551,209 L551,236 L699,209 L699,236 L840,224"/>
+  <text class="sawlbl" x="440" y="274" text-anchor="middle">compacting at 150k — each drop is a summary</text>
+
+  <text class="note" x="60" y="294">cost ≈ shaded area = context size × turns</text>
+  <text class="note" x="848" y="274" text-anchor="end">turns</text>
+</svg>

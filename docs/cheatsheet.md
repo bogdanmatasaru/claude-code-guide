@@ -55,6 +55,7 @@ Fine-grained: `/permissions` → allow/deny patterns like `Bash(npm run test:*)`
 | `/clear` | New conversation, keep project memory (use between tasks) |
 | `/memory` | Edit persistent memory ([CLAUDE.md](./reference/claude-md.md)) |
 | `/compact [focus]` | Compress the conversation, keep the essentials |
+| `/autocompact [size]` | Show/set the auto-compact window (`500k`, `auto`) → [guide](./guides/auto-compact.md) |
 | `/context` | Show context-window usage |
 | `/model` · `/effort` | Switch model · set reasoning effort |
 | `/usage` | Token use + plan limits (5h + weekly) |

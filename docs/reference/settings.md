@@ -53,6 +53,8 @@ Claude Code reads settings from five layers. Higher layers win on conflict. Perm
 | `autoMemoryEnabled` | Toggle auto memory — see [CLAUDE.md & memory](./claude-md.md) |
 | `includeCoAuthoredBy` | Add the Claude co-author trailer to commits |
 | `autoUpdatesChannel` | Which release channel to auto-update from |
+| `autoCompactEnabled` | Compact automatically near the context limit (default `true`); `DISABLE_AUTO_COMPACT=1` overrides |
+| `autoCompactWindow` | How full the context gets before auto-compaction fires, `100000`–`1000000` tokens — see [Tune auto-compaction](../guides/auto-compact.md) |
 
 > [!NOTE]
 > Claude Code ships many more keys (e.g. `statusLine`, `claudeMdExcludes`, `autoMemoryDirectory`). Check the official reference for the full, current list.
