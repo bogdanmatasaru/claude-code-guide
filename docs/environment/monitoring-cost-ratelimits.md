@@ -47,7 +47,7 @@ The [one-command setup](./bootstrap-setup.md) installs this for you — via [ccs
 
 The 5-hour / weekly **usage %** widgets read the `five_hour` / `seven_day` buckets from Anthropic's usage API. **Enterprise** and **Team** seats return those buckets as `null`, so the usage widgets render **`[Timeout]`** — a back-off label, not a real network timeout (the API answers `200` in under half a second). Those plans bill against a **monthly pay-as-you-go** bucket instead.
 
-The setup handles this automatically: `setup.sh` installs a launcher (`profile-switch.sh`) that detects your account's `subscriptionType` and swaps to an **enterprise profile** showing the 5-hour reset timer plus your **monthly credit remaining** — no `[Timeout]`. Consumer (Pro/Max) accounts keep the usage bars. Run `./setup.sh --check` to see which profile is active. Details: [status-line assets](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/statusline#account-aware-profiles-enterprise--team).
+The setup handles this automatically: `setup.sh` installs a launcher (`profile-switch.sh`) that detects your account's `subscriptionType` and, on enterprise/team seats whose payload has no usable buckets, swaps to an **enterprise profile** showing the 5-hour reset timer plus your **monthly credit remaining** — no `[Timeout]`. Consumer (Pro/Max) accounts keep the usage bars, and so do enterprise/team seats whose payload delivers real `five_hour`/`seven_day` buckets. Run `./setup.sh --check` to see which profile is active. Details: [status-line assets](https://github.com/bogdanmatasaru/claude-code-guide/tree/main/assets/statusline#account-aware-profiles-enterprise--team).
 
 ### Sessions on a non-Anthropic endpoint
 

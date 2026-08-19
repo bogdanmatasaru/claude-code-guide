@@ -48,22 +48,24 @@ Tweak the widgets interactively by running `ccstatusline` in a terminal.
 ### Account-aware profiles (enterprise / team)
 
 `ccstatusline`'s **5h / weekly usage** widgets read the `five_hour` / `seven_day`
-rate-limit buckets from Anthropic's usage API. **Enterprise/Team** seats return those
-buckets as `null`, so those widgets show **`[Timeout]`** (a back-off label — not a real
-network timeout; the API answers `200` in <0.5s). Enterprise plans expose a monthly
-pay-as-you-go bucket (`extra_usage`) instead.
+rate-limit buckets from Anthropic's usage API. **Most Enterprise/Team** seats return
+those buckets as `null`, so those widgets show **`[Timeout]`** (a back-off label — not a
+real network timeout; the API answers `200` in <0.5s). Enterprise plans expose a monthly
+pay-as-you-go bucket (`extra_usage`) instead. Some enterprise/team orgs, however,
+deliver real `rate_limits` in the status-line payload just like consumer plans.
 
-So `profile-switch.sh` reads only your account's `subscriptionType` (never the token)
-and picks:
+So `profile-switch.sh` reads only your account's `subscriptionType` (never the token),
+then lets **the payload have the final word** on enterprise/team seats:
 
 | Account | Profile | Line 2 shows |
 | --- | --- | --- |
-| **enterprise / team** | `settings.enterprise.json` | `🟢 5h ⟳ <reset>    💳 credit <$ left>` |
+| **enterprise / team**, payload without usable buckets | `settings.enterprise.json` | `🟢 5h ⟳ <reset>    💳 credit <$ left>` |
+| **enterprise / team**, payload with `five_hour` **and** `seven_day` | `settings.consumer.json` | the consumer line below — the quota data is real, so it is shown |
 | Pro / Max / other | `settings.consumer.json` | `🟢 5h <usage%> ⟳ <reset>   📅 7d <usage%> ⟳ <reset>` |
 
 **The enterprise shim.** `ccstatusline` fetches usage once per render and shares it
 across all usage widgets, UNIONing their required fields. `reset-timer` needs
-`sessionResetAt`, and Claude Code's payload carries no `rate_limits`, so on enterprise
+`sessionResetAt`, and on a bucketless enterprise payload (no usable `rate_limits`)
 that field is unsatisfiable and the shared object errors out — which would make
 `extra-usage-remaining` show `[Timeout]` too. The launcher injects a synthetic
 `rate_limits.five_hour.resets_at` (the 5h block reset, read from `ccstatusline`'s own
@@ -112,9 +114,10 @@ cp statusline.sh ~/.claude/statusline.sh && chmod +x ~/.claude/statusline.sh
 
 ## Notes
 
-- The **consumer** profile's 5h / weekly **usage %** comes from the usage API; on
-  enterprise/team those buckets are null (handled by the enterprise profile above).
-  The **5h reset timer** is computed locally and always works.
+- The **consumer** profile's 5h / weekly **usage %** comes from the payload or the
+  usage API; on most enterprise/team seats those buckets are null (handled by the
+  enterprise profile above), and on the seats that do send them the launcher routes
+  to the consumer profile. The **5h reset timer** is computed locally and always works.
 - The **credit** widget is API-backed, so it may briefly show `[Rate limited]` /
   `[API Error]` after rapid repeated renders — cosmetic, it self-heals on the next good
   fetch (cached 180s) and never affects actual Claude usage.

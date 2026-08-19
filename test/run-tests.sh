@@ -133,8 +133,10 @@ while [ $# -gt 0 ]; do
   [ "$1" = "--config" ] && { cfg="$2"; shift; }
   shift
 done
-cat >/dev/null 2>&1 || true
+in=$(cat 2>/dev/null || true)
 echo "CCSTATUSLINE_CONFIG=$(basename "$cfg")"
+# Lets tests see whether the launcher's shim injected the synthetic reset field.
+case "$in" in *resets_at*) echo "CCSTATUSLINE_STDIN_HAS_RESETS_AT=1" ;; esac
 SH
 
   chmod +x "$BIN"/*
@@ -269,6 +271,48 @@ for var in CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDR
     "$(launcher_profile "$var=1")" "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
   assert "no profile cache written for $var" test ! -f "$CCSL/.active-profile"
 done
+
+# ─────────────────────────────────────────────────────────────────────────────
+section "4d. Enterprise routing — the payload has the final word"
+# ─────────────────────────────────────────────────────────────────────────────
+# The sandbox `security` stub fails, so pick_profile falls back to this
+# credentials fixture; without it every run lands on the consumer profile and
+# the enterprise branch is unreachable from tests, in any direction.
+CREDS="$FAKEHOME/.claude/.credentials.json"
+printf '%s' '{"claudeAiOauth":{"subscriptionType":"enterprise"}}' > "$CREDS"
+enterprise_launch() { # enterprise_launch PAYLOAD
+  rm -f "$CCSL/.active-profile"
+  printf '%s' "$1" | env -i HOME="$FAKEHOME" \
+    PATH="$SANDBOX_BIN:/usr/bin:/bin:/usr/sbin:/sbin" TERM=dumb \
+    sh "$CCSL/profile-switch.sh" 2>/dev/null
+}
+PAYLOAD_BASE='"model":{"display_name":"t"},"session_id":"t","cwd":"/tmp","workspace":{"current_dir":"/tmp"}'
+
+# Bucketless payload: the classic enterprise seat — shim injects the synthetic
+# five_hour.resets_at so reset-timer never poisons the shared usage fetch.
+OUT_ENT="$(enterprise_launch "{$PAYLOAD_BASE}")"
+assert_out "no buckets → enterprise profile"  "$OUT_ENT" "CCSTATUSLINE_CONFIG=settings.enterprise.json"
+assert_out "no buckets → shim injected resets_at" "$OUT_ENT" "CCSTATUSLINE_STDIN_HAS_RESETS_AT=1"
+
+# Hollow rate_limits (present but null buckets): must behave exactly like no
+# rate_limits at all. This is the predicate-drift case — a probe keyed on
+# five_hour.used_percentage and a shim keyed on mere rate_limits presence would
+# each decline it, and the timer would render [Timeout].
+OUT_HOLLOW="$(enterprise_launch "{$PAYLOAD_BASE,\"rate_limits\":{\"five_hour\":null,\"seven_day\":null}}")"
+assert_out "hollow buckets → enterprise profile" "$OUT_HOLLOW" "CCSTATUSLINE_CONFIG=settings.enterprise.json"
+assert_out "hollow buckets → shim injected resets_at" "$OUT_HOLLOW" "CCSTATUSLINE_STDIN_HAS_RESETS_AT=1"
+
+# Both buckets real: the usage widgets have data, so hiding them behind the
+# enterprise layout would be wrong — consumer profile wins.
+OUT_BOTH="$(enterprise_launch "{$PAYLOAD_BASE,\"rate_limits\":{\"five_hour\":{\"used_percentage\":19,\"resets_at\":1787156400},\"seven_day\":{\"used_percentage\":2,\"resets_at\":1787648400}}}")"
+assert_out "real 5h+7d buckets → consumer profile" "$OUT_BOTH" "CCSTATUSLINE_CONFIG=settings.consumer.json"
+
+# five_hour alone is not enough: the consumer profile's weekly widgets would
+# flip the shared usage object to {error} and take the 5h gauge down with it.
+OUT_5H="$(enterprise_launch "{$PAYLOAD_BASE,\"rate_limits\":{\"five_hour\":{\"used_percentage\":19,\"resets_at\":1787156400},\"seven_day\":null}}")"
+assert_out "five_hour-only → enterprise profile" "$OUT_5H" "CCSTATUSLINE_CONFIG=settings.enterprise.json"
+
+rm -f "$CREDS" "$CCSL/.active-profile"
 
 # ─────────────────────────────────────────────────────────────────────────────
 section "5. --check on a broken environment detects the problem"

@@ -210,7 +210,7 @@ validate() {
       fi
     done
     case "$(detect_subscription)" in
-      enterprise|team) ok "Claude account: enterprise/team → enterprise profile (5h timer + credit, no [Timeout])" ;;
+      enterprise|team) ok "Claude account: enterprise/team → enterprise profile, unless the payload carries real 5h/7d buckets (then the usage bars show)" ;;
       "")              skip "Claude account: not detected (log in to Claude Code) → consumer profile by default" ;;
       *)               ok "Claude account: consumer (Pro/Max) → consumer profile (5h/7d usage)" ;;
     esac
@@ -462,8 +462,10 @@ if [ -d "$SL_ASSETS" ]; then
   # ccstatusline config + account-aware profiles. We ship TWO profiles plus a tiny
   # launcher (profile-switch.sh) that auto-selects by account type: consumer
   # (Pro/Max) keeps the 5h/7d usage bars; enterprise/team swap to a 5h-timer +
-  # monthly-credit profile, because their five_hour/seven_day buckets come back
-  # null and the usage widgets would otherwise show "[Timeout]".
+  # monthly-credit profile, because on most such seats the five_hour/seven_day
+  # buckets come back null and the usage widgets would otherwise show "[Timeout]".
+  # Seats that DO send real buckets in the payload are routed back to the consumer
+  # bars per render — the payload has the final word (see profile-switch.sh).
   CCSL_DIR="$HOME/.config/ccstatusline"
   if $DRY_RUN; then
     skip "[dry-run] install ccstatusline profiles + profile-switch.sh into $CCSL_DIR"
@@ -509,7 +511,7 @@ if [ -d "$SL_ASSETS" ]; then
     chmod +x "$CCSL_DIR/profile-switch.sh"
     ok "installed $CCSL_DIR/profile-switch.sh (auto-selects profile by account)"
     case "$(detect_subscription)" in
-      enterprise|team) ok "detected enterprise/team account → enterprise profile active" ;;
+      enterprise|team) ok "detected enterprise/team account → enterprise profile, consumer bars if the payload sends real buckets" ;;
       "")              skip "account not detected yet (log in to Claude Code) → consumer profile by default" ;;
       *)               ok "detected consumer (Pro/Max) account → consumer profile active" ;;
     esac

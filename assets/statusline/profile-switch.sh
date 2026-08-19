@@ -8,7 +8,8 @@
 # WHY this exists
 #   ccstatusline's session-usage / weekly-usage / weekly-reset-timer widgets read
 #   the five_hour / seven_day rate-limit buckets from api.anthropic.com/api/oauth/usage.
-#   Enterprise/Team seats return those buckets as null, so those widgets render
+#   MOST Enterprise/Team seats return those buckets as null (but not all — see the
+#   payload check in the enterprise branch below), so those widgets render
 #   "[Timeout]" (a pessimistic-lock label, not a real network timeout — the API
 #   answers 200 in <0.5s). Enterprise exposes a monthly pay-as-you-go bucket
 #   (extra_usage) instead. So we ship three profiles and auto-select.
@@ -37,15 +38,18 @@
 #   they are detected by their own CLAUDE_CODE_USE_* variables and get the same
 #   profile. Deciding to render nothing needs no knowledge of their payload shape.
 #
-# ENTERPRISE SHIM (verified)
+# ENTERPRISE ROUTING AND SHIM (verified on seats of both kinds)
 #   ccstatusline fetches usage ONCE per render and shares it across all Usage
-#   widgets, UNIONing their required fields. reset-timer requires sessionResetAt;
-#   Claude Code's statusline payload carries NO rate_limits, so on enterprise that
-#   field is unsatisfiable and the shared object flips to {error}, which would make
-#   extra-usage-remaining show "[Timeout]" too. We inject a synthetic
-#   rate_limits.five_hour.resets_at (the 5h block reset, read from ccstatusline's
-#   own block-cache) so sessionResetAt is satisfied LOCALLY, never enters the API
-#   fetch, and the timer + monthly credit both render stably.
+#   widgets, UNIONing their required fields. reset-timer requires sessionResetAt.
+#   On MOST enterprise seats the statusline payload carries no usable rate_limits,
+#   so that field is unsatisfiable and the shared object flips to {error}, which
+#   would make extra-usage-remaining show "[Timeout]" too. For those payloads we
+#   inject a synthetic rate_limits.five_hour.resets_at (the 5h block reset, read
+#   from ccstatusline's own block-cache) so sessionResetAt is satisfied LOCALLY,
+#   never enters the API fetch, and the timer + monthly credit both render stably.
+#   But SOME enterprise/team seats deliver real five_hour AND seven_day buckets in
+#   the payload; those get the consumer profile instead — the routing lives in
+#   route_enterprise(), one interpreter run that both decides and shims.
 #
 # Detection is cached for $TTL seconds. No credential value is ever printed; only
 # the subscriptionType field is read from the Keychain item.
@@ -121,16 +125,30 @@ pick_profile() {
   esac
 }
 
-# Enterprise only: inject rate_limits.five_hour.resets_at (5h block reset, from
-# ccstatusline's block-cache) when the payload lacks rate_limits, so reset-timer's
-# required field is met locally and never poisons the shared usage fetch.
-enterprise_shim() {
+# Enterprise only: one interpreter run both routes and shims, so the two verdicts
+# cannot drift. Exit 3 = the payload carries usable five_hour AND seven_day buckets
+# (printed unchanged; render the consumer profile — the usage widgets have data).
+# Exit 0 = enterprise layout; when five_hour.resets_at is missing OR hollow, a
+# synthetic one is injected (5h block reset, from ccstatusline's block-cache) so
+# reset-timer's required field is met locally and never poisons the shared usage
+# fetch. "Hollow" matters: some seats send rate_limits with null buckets, which is
+# not the same as no rate_limits at all, and a shim keyed on mere presence would
+# skip exactly the payloads it exists for.
+route_enterprise() {
   "$PYTHON" -c 'import sys, json, glob, os, time, datetime
 try:
     d = json.load(sys.stdin)
+    if not isinstance(d, dict):
+        d = {}
 except Exception:
-    sys.stdout.write("{}"); sys.exit(0)
-if not d.get("rate_limits"):
+    d = {}
+rl = d.get("rate_limits") or {}
+fh = rl.get("five_hour") or {}
+sd = rl.get("seven_day") or {}
+if fh.get("used_percentage") is not None and sd.get("used_percentage") is not None:
+    json.dump(d, sys.stdout)
+    sys.exit(3)
+if fh.get("resets_at") is None:
     r = None
     bc = sorted(glob.glob(os.path.expanduser("~/.cache/ccstatusline/block-cache-*.json")))
     if bc:
@@ -142,7 +160,7 @@ if not d.get("rate_limits"):
             r = None
     if r is None:
         r = int(time.time()) + 5 * 3600
-    d["rate_limits"] = {"five_hour": {"resets_at": r, "used_percentage": 0}}
+    d["rate_limits"] = dict(rl, five_hour={"resets_at": r, "used_percentage": fh.get("used_percentage") or 0})
 json.dump(d, sys.stdout)'
 }
 
@@ -161,7 +179,35 @@ if [ -z "$cfg" ] || [ ! -f "$cfg" ]; then
 fi
 
 if [ "$cfg" = "$ENTERPRISE" ] && [ -f "$cfg" ]; then
-  enterprise_shim | "$CCSTATUSLINE" --config "$cfg"
+  # "Enterprise means no 5h/7d buckets" is per-org, not universal: some team and
+  # enterprise seats deliver rate_limits in the statusline payload like any
+  # consumer plan, and for them the enterprise profile hides a live quota while
+  # rendering "credit n/a" beside it. The payload is the authority, checked per
+  # render from the payload already in hand — no network call; the cache keeps
+  # deciding only the subscription tier. Consumer needs BOTH buckets: its weekly
+  # widgets make a five_hour-only payload flip the shared usage object to {error}
+  # and take the working 5h gauge down with it. Known trade-off: a bucket-bearing
+  # seat with a funded extra_usage balance loses the credit widget to this route;
+  # that combination has not been observed — build a combined profile if it shows
+  # up, do not re-hide the quota.
+  input=$(cat)
+  routed=$(printf '%s' "$input" | route_enterprise 2>/dev/null)
+  rc=$?
+  if [ "$rc" = "3" ]; then
+    if [ -f "$CONSUMER" ]; then
+      printf '%s' "$routed" | "$CCSTATUSLINE" --config "$CONSUMER"
+    else
+      # Same convention as the custom-endpoint branch: a hint beats silently
+      # rendering the layout this branch just proved wrong.
+      printf 'consumer profile missing · run ./setup.sh to reinstall the status-line profiles\n'
+    fi
+  elif [ "$rc" = "0" ] && [ -n "$routed" ]; then
+    printf '%s' "$routed" | "$CCSTATUSLINE" --config "$cfg"
+  else
+    # python3 unavailable or the route died: fall back to the raw payload rather
+    # than showing nothing.
+    printf '%s' "$input" | "$CCSTATUSLINE" --config "$cfg"
+  fi
 elif [ -n "$cfg" ] && [ -f "$cfg" ]; then
   exec "$CCSTATUSLINE" --config "$cfg"
 else
