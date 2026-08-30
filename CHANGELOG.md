@@ -25,7 +25,11 @@ Claude Code releases.
   usage widgets at all. Without `rate_limits` in the payload, `ccstatusline`'s usage
   widgets fall back to Anthropic's usage API and render *your Anthropic quota* beside
   another provider's model. `profile-switch.sh` now decides on the provider before the
-  account, and fails closed when the profile is missing.
+  account, and fails closed when the profile is missing. One exception, added after a
+  local pass-through proxy lost its quota bars to it: when the payload itself carries
+  both the `five_hour` and `seven_day` buckets, the numbers describe the account
+  answering the session, so the consumer profile renders and the widgets read them from
+  stdin without any usage-API call.
 - `verified:` frontmatter stamps with a CI check (`npm run lint:stamps`) that warns at
   30 days and fails at 90, so pages documenting fast-moving behaviour get re-read or
   deleted rather than quietly going stale.

@@ -88,9 +88,18 @@ against another endpoint. So the launcher decides on the **provider first**, rea
 network call), and selects `settings.custom-endpoint.json`, which carries no usage
 widgets at all.
 
+The one thing that overrides that is the payload. A base URL that is not
+`api.anthropic.com` does not prove a foreign account: a local pass-through proxy still
+answers from yours. Claude Code emits `rate_limits` only for a Claude.ai subscription
+session on an endpoint it accepts as first party, so when both buckets arrive with a real
+percentage the numbers belong to the account answering — the widgets read them from stdin
+and make no usage-API call. Same rule the enterprise route already runs on: the payload
+has the final word.
+
 | Session | Profile | Line 2 shows |
 | --- | --- | --- |
-| custom `ANTHROPIC_BASE_URL` | `settings.custom-endpoint.json` | git / session / disk only — no usage widgets |
+| custom `ANTHROPIC_BASE_URL`, no usable `rate_limits` | `settings.custom-endpoint.json` | git / session / disk only — no usage widgets |
+| custom `ANTHROPIC_BASE_URL`, both buckets in the payload | `settings.consumer.json` | 5h + 7d bars, read from the payload |
 
 If that profile is missing the launcher prints a hint and stops, rather than falling
 back to one that would show the wrong account's numbers. A blank field costs you

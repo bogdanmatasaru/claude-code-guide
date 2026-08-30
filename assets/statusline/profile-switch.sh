@@ -38,6 +38,19 @@
 #   they are detected by their own CLAUDE_CODE_USE_* variables and get the same
 #   profile. Deciding to render nothing needs no knowledge of their payload shape.
 #
+#   But a base URL that is not api.anthropic.com is not proof of a foreign
+#   account. A local pass-through proxy — a usage collector on 127.0.0.1, a
+#   corporate gateway — still talks to Anthropic with your own credentials, and
+#   blanking the quota there hides live numbers for no gain. Claude Code marks
+#   the difference in the payload it already hands this script: it emits
+#   rate_limits ONLY for a Claude.ai subscription session on an endpoint it
+#   accepts as first-party. So when BOTH buckets arrive, the percentages describe
+#   the account answering this session, the widgets read them from stdin and make
+#   no oauth fetch, and the consumer profile is the right one. That is the same
+#   rule route_enterprise applies a few lines down: the payload has the final
+#   word. Bedrock / Vertex / Foundry are exempt from the override — they are
+#   decided by their own variables, before stdin is ever read.
+#
 # ENTERPRISE ROUTING AND SHIM (verified on seats of both kinds)
 #   ccstatusline fetches usage ONCE per render and shares it across all Usage
 #   widgets, UNIONing their required fields. reset-timer requires sessionResetAt.
@@ -76,13 +89,17 @@ PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
 # does not pass as first-party. Every other spelling — http://, uppercase, an
 # explicit :443, stray whitespace — falls to the custom profile, which loses
 # widgets rather than showing the wrong ones.
-is_first_party() {
-  [ -n "${CLAUDE_CODE_USE_BEDROCK:-}" ] && return 1
-  [ -n "${CLAUDE_CODE_USE_VERTEX:-}" ]  && return 1
-  [ -n "${CLAUDE_CODE_USE_FOUNDRY:-}" ] && return 1
-  [ -n "${CLAUDE_CODE_USE_ANTHROPIC_AWS:-}" ] && return 1
-  [ -n "${ANTHROPIC_BEDROCK_BASE_URL:-}" ]    && return 1
-  [ -n "${ANTHROPIC_VERTEX_BASE_URL:-}" ]     && return 1
+uses_cloud_provider() {
+  [ -n "${CLAUDE_CODE_USE_BEDROCK:-}" ] && return 0
+  [ -n "${CLAUDE_CODE_USE_VERTEX:-}" ]  && return 0
+  [ -n "${CLAUDE_CODE_USE_FOUNDRY:-}" ] && return 0
+  [ -n "${CLAUDE_CODE_USE_ANTHROPIC_AWS:-}" ] && return 0
+  [ -n "${ANTHROPIC_BEDROCK_BASE_URL:-}" ]    && return 0
+  [ -n "${ANTHROPIC_VERTEX_BASE_URL:-}" ]     && return 0
+  return 1
+}
+
+base_url_is_first_party() {
   case "${ANTHROPIC_BASE_URL:-}" in
     "") return 0 ;;
     https://api.anthropic.com|https://api.anthropic.com/*) return 0 ;;
@@ -90,15 +107,47 @@ is_first_party() {
   esac
 }
 
-if ! is_first_party; then
+# Fail closed: never fall through to bare ccstatusline. It reads
+# ~/.config/ccstatusline/settings.json, which setup.sh installs as the consumer
+# layout — usage widgets and all. Printing a hint costs nothing; rendering
+# another account's numbers costs a plan decision.
+render_custom_endpoint() {
   if [ -f "$CUSTOM" ]; then
-    exec "$CCSTATUSLINE" --config "$CUSTOM"
+    "$CCSTATUSLINE" --config "$CUSTOM"
+    return
   fi
-  # Fail closed: never fall through. Bare ccstatusline reads
-  # ~/.config/ccstatusline/settings.json, which setup.sh installs as the consumer
-  # layout — usage widgets and all. Printing a hint costs nothing; rendering
-  # another account's numbers costs a plan decision.
   printf 'custom endpoint · run ./setup.sh to install the status-line profile\n'
+}
+
+# Exit 0 only when the payload carries BOTH usage buckets with a real percentage.
+# A missing python3, a malformed payload or a hollow bucket all exit non-zero and
+# keep the quota off screen, which is the safe direction.
+payload_has_buckets() {
+  "$PYTHON" -c 'import sys, json
+try:
+    d = json.load(sys.stdin)
+    rl = (d if isinstance(d, dict) else {}).get("rate_limits") or {}
+except Exception:
+    sys.exit(1)
+fh = rl.get("five_hour") or {}
+sd = rl.get("seven_day") or {}
+sys.exit(0 if fh.get("used_percentage") is not None
+         and sd.get("used_percentage") is not None else 1)' 2>/dev/null
+}
+
+if uses_cloud_provider; then
+  # Nothing stdin could say changes this, so it is never read here.
+  render_custom_endpoint </dev/null
+  exit 0
+fi
+
+if ! base_url_is_first_party; then
+  input=$(cat)
+  if [ -f "$CONSUMER" ] && printf '%s' "$input" | payload_has_buckets; then
+    printf '%s' "$input" | "$CCSTATUSLINE" --config "$CONSUMER"
+  else
+    printf '%s' "$input" | render_custom_endpoint
+  fi
   exit 0
 fi
 

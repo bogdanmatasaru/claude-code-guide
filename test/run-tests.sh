@@ -272,6 +272,49 @@ for var in CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDR
   assert "no profile cache written for $var" test ! -f "$CCSL/.active-profile"
 done
 
+# A base URL that is not api.anthropic.com does NOT prove a foreign account: a
+# local pass-through proxy (a usage collector on 127.0.0.1) still answers from
+# this account, and Claude Code proves it by putting rate_limits in the payload —
+# it emits those buckets only for a Claude.ai subscription session. Blanking a
+# live quota there hid real numbers on every window behind such a proxy.
+launcher_profile_with() { # launcher_profile_with PAYLOAD VAR=VALUE...
+  _p="$1"; shift
+  rm -f "$CCSL/.active-profile"
+  printf '%s' "$_p" | env -i HOME="$FAKEHOME" \
+    PATH="$SANDBOX_BIN:/usr/bin:/bin:/usr/sbin:/sbin" TERM=dumb "$@" \
+    sh "$CCSL/profile-switch.sh" 2>/dev/null
+}
+BUCKETS='"rate_limits":{"five_hour":{"used_percentage":3,"resets_at":1788134400},"seven_day":{"used_percentage":99,"resets_at":1788231600}}'
+PAYLOAD_BUCKETS="{\"model\":{\"display_name\":\"t\"},\"session_id\":\"t\",\"cwd\":\"/tmp\",\"workspace\":{\"current_dir\":\"/tmp\"},$BUCKETS}"
+
+assert_out "proxy base URL + both buckets → consumer profile" \
+  "$(launcher_profile_with "$PAYLOAD_BUCKETS" ANTHROPIC_BASE_URL=http://127.0.0.1:8787/w/claude)" \
+  "CCSTATUSLINE_CONFIG=settings.consumer.json"
+assert "payload override writes no profile cache" test ! -f "$CCSL/.active-profile"
+
+# Only five_hour: consumer's weekly widgets would flip the shared usage object to
+# {error} and take the working 5h gauge down with it — the same reason the
+# enterprise route demands both buckets. Half a payload keeps the custom profile.
+PAYLOAD_HALF='{"model":{"display_name":"t"},"session_id":"t","cwd":"/tmp","workspace":{"current_dir":"/tmp"},"rate_limits":{"five_hour":{"used_percentage":3}}}'
+assert_out "proxy base URL + one bucket → custom-endpoint profile" \
+  "$(launcher_profile_with "$PAYLOAD_HALF" ANTHROPIC_BASE_URL=http://127.0.0.1:8787/w/claude)" \
+  "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
+
+# A second provider running in a parallel window is the case this must not break:
+# its payload carries no rate_limits, so it keeps the quota-free profile even
+# while a Claude window on the same proxy shows the bars.
+assert_out "proxy base URL + no buckets → custom-endpoint profile" \
+  "$(launcher_profile_with "$STATUS_PAYLOAD" ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic)" \
+  "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
+
+# Bedrock / Vertex / Foundry are decided before stdin is read, so a payload that
+# somehow carried buckets still cannot pull the Anthropic quota onto their bar.
+for var in CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY; do
+  assert_out "$var ignores buckets in the payload" \
+    "$(launcher_profile_with "$PAYLOAD_BUCKETS" "$var=1")" \
+    "CCSTATUSLINE_CONFIG=settings.custom-endpoint.json"
+done
+
 # ─────────────────────────────────────────────────────────────────────────────
 section "4d. Enterprise routing — the payload has the final word"
 # ─────────────────────────────────────────────────────────────────────────────
