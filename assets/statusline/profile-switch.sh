@@ -72,6 +72,7 @@ CONFIG_DIR="$HOME/.config/ccstatusline"
 ENTERPRISE="$CONFIG_DIR/settings.enterprise.json"
 CONSUMER="$CONFIG_DIR/settings.consumer.json"
 CUSTOM="$CONFIG_DIR/settings.custom-endpoint.json"
+WEEKLY="$CONFIG_DIR/settings.weekly.json"
 CACHE="$CONFIG_DIR/.active-profile"
 TTL=300
 
@@ -156,6 +157,47 @@ sys.exit(0 if fh.get("used_percentage") is not None
          and sd.get("used_percentage") is not None else 1)' 2>/dev/null
 }
 
+# Exit 0 when the payload carries a seven_day percentage and no five_hour one. Plans
+# without a 5-hour window send that (seen since 2026-10-23), and the consumer
+# layout's 5h widgets then fail the shared usage fetch and hide the 7d line too.
+payload_weekly_only() {
+  "$PYTHON" -I -c 'import sys, json
+try:
+    d = json.load(sys.stdin)
+    rl = (d if isinstance(d, dict) else {}).get("rate_limits") or {}
+except Exception:
+    sys.exit(1)
+fh = rl.get("five_hour") or {}
+sd = rl.get("seven_day") or {}
+sys.exit(0 if fh.get("used_percentage") is None
+         and sd.get("used_percentage") is not None else 1)' 2>/dev/null
+}
+
+# The consumer layout minus its 5h widgets, derived rather than shipped so it follows
+# whatever the consumer profile holds. A line left with only labels is dropped.
+write_weekly_profile() {
+  "$PYTHON" -I -c 'import sys, json
+src, dst = sys.argv[1], sys.argv[2]
+five = {"session-usage", "reset-timer"}
+d = json.load(open(src))
+lines = []
+for line in d.get("lines", []):
+    if any(w.get("type") in five for w in line):
+        line = [w for w in line if w.get("type") not in five]
+        if all(w.get("type") == "custom-text" for w in line):
+            continue
+    lines.append(line)
+d["lines"] = lines
+with open(dst, "w") as f:
+    json.dump(d, f, indent=2)' "$CONSUMER" "$WEEKLY" 2>/dev/null
+}
+
+# Exit 0 when the payload on stdin wants the weekly profile and it is in place.
+weekly_ready() {
+  [ -f "$CONSUMER" ] && payload_weekly_only \
+    && { [ "$WEEKLY" -nt "$CONSUMER" ] || write_weekly_profile; }
+}
+
 if uses_cloud_provider; then
   # Nothing stdin could say changes this, so it is never read here.
   render_custom_endpoint </dev/null
@@ -166,6 +208,8 @@ if ! base_url_is_first_party; then
   input=$(cat)
   if [ -f "$CONSUMER" ] && printf '%s' "$input" | payload_has_buckets; then
     printf '%s' "$input" | run_ccstatusline --config "$CONSUMER"
+  elif printf '%s' "$input" | weekly_ready; then
+    printf '%s' "$input" | run_ccstatusline --config "$WEEKLY"
   else
     printf '%s' "$input" | render_custom_endpoint
   fi
@@ -279,7 +323,11 @@ if [ "$cfg" = "$ENTERPRISE" ] && [ -f "$cfg" ]; then
     printf '%s' "$input" | run_ccstatusline --config "$cfg"
   fi
 elif [ -n "$cfg" ] && [ -f "$cfg" ]; then
-  run_ccstatusline --config "$cfg"
+  input=$(cat)
+  if [ "$cfg" = "$CONSUMER" ] && printf '%s' "$input" | weekly_ready; then
+    cfg="$WEEKLY"
+  fi
+  printf '%s' "$input" | run_ccstatusline --config "$cfg"
 else
   run_ccstatusline
 fi
