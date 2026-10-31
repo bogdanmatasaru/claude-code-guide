@@ -84,7 +84,7 @@ PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
 # instead of the whole bar, context included. Dropping the null keys turns them into
 # the missing case it already handles. Unparseable input passes through unchanged.
 run_ccstatusline() {
-  "$PYTHON" -c 'import sys, json
+  "$PYTHON" -I -c 'import sys, json
 raw = sys.stdin.read()
 try:
     d = json.loads(raw)
@@ -144,7 +144,7 @@ render_custom_endpoint() {
 # A missing python3, a malformed payload or a hollow bucket all exit non-zero and
 # keep the quota off screen, which is the safe direction.
 payload_has_buckets() {
-  "$PYTHON" -c 'import sys, json
+  "$PYTHON" -I -c 'import sys, json
 try:
     d = json.load(sys.stdin)
     rl = (d if isinstance(d, dict) else {}).get("rate_limits") or {}
@@ -180,7 +180,7 @@ read_subscription() {
     creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
   fi
   [ -z "$creds" ] && [ -f "$HOME/.claude/.credentials.json" ] && creds=$(cat "$HOME/.claude/.credentials.json" 2>/dev/null)
-  printf '%s' "$creds" | "$PYTHON" -c 'import sys, json
+  printf '%s' "$creds" | "$PYTHON" -I -c 'import sys, json
 try:
     d = json.load(sys.stdin) or {}
     print(((d.get("claudeAiOauth") or {}).get("subscriptionType")) or "")
@@ -205,7 +205,7 @@ pick_profile() {
 # not the same as no rate_limits at all, and a shim keyed on mere presence would
 # skip exactly the payloads it exists for.
 route_enterprise() {
-  "$PYTHON" -c 'import sys, json, glob, os, time, datetime
+  "$PYTHON" -I -c 'import sys, json, glob, os, time, datetime
 try:
     d = json.load(sys.stdin)
     if not isinstance(d, dict):
