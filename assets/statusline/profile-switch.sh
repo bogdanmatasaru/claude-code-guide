@@ -78,6 +78,27 @@ TTL=300
 CCSTATUSLINE="$(command -v ccstatusline 2>/dev/null || echo /opt/homebrew/bin/ccstatusline)"
 PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
 
+# Claude Code sends a rate-limit window as null when it has no data for it (seen
+# since 2026-10-23: five_hour null, seven_day set). ccstatusline's schema accepts a
+# missing window but rejects null, and then prints "Invalid status JSON format"
+# instead of the whole bar, context included. Dropping the null keys turns them into
+# the missing case it already handles. Unparseable input passes through unchanged.
+run_ccstatusline() {
+  "$PYTHON" -c 'import sys, json
+raw = sys.stdin.read()
+try:
+    d = json.loads(raw)
+    rl = d.get("rate_limits")
+    if rl is None:
+        d.pop("rate_limits", None)
+    elif isinstance(rl, dict):
+        d["rate_limits"] = {k: v for k, v in rl.items() if v is not None}
+    raw = json.dumps(d)
+except Exception:
+    pass
+sys.stdout.write(raw)' 2>/dev/null | "$CCSTATUSLINE" "$@"
+}
+
 # Provider gate. Returns 0 only when this session talks to Anthropic's own API
 # on a Claude.ai subscription — the one case where the usage widgets have data.
 #
@@ -113,7 +134,7 @@ base_url_is_first_party() {
 # another account's numbers costs a plan decision.
 render_custom_endpoint() {
   if [ -f "$CUSTOM" ]; then
-    "$CCSTATUSLINE" --config "$CUSTOM"
+    run_ccstatusline --config "$CUSTOM"
     return
   fi
   printf 'custom endpoint · run ./setup.sh to install the status-line profile\n'
@@ -144,7 +165,7 @@ fi
 if ! base_url_is_first_party; then
   input=$(cat)
   if [ -f "$CONSUMER" ] && printf '%s' "$input" | payload_has_buckets; then
-    printf '%s' "$input" | "$CCSTATUSLINE" --config "$CONSUMER"
+    printf '%s' "$input" | run_ccstatusline --config "$CONSUMER"
   else
     printf '%s' "$input" | render_custom_endpoint
   fi
@@ -244,21 +265,21 @@ if [ "$cfg" = "$ENTERPRISE" ] && [ -f "$cfg" ]; then
   rc=$?
   if [ "$rc" = "3" ]; then
     if [ -f "$CONSUMER" ]; then
-      printf '%s' "$routed" | "$CCSTATUSLINE" --config "$CONSUMER"
+      printf '%s' "$routed" | run_ccstatusline --config "$CONSUMER"
     else
       # Same convention as the custom-endpoint branch: a hint beats silently
       # rendering the layout this branch just proved wrong.
       printf 'consumer profile missing · run ./setup.sh to reinstall the status-line profiles\n'
     fi
   elif [ "$rc" = "0" ] && [ -n "$routed" ]; then
-    printf '%s' "$routed" | "$CCSTATUSLINE" --config "$cfg"
+    printf '%s' "$routed" | run_ccstatusline --config "$cfg"
   else
     # python3 unavailable or the route died: fall back to the raw payload rather
     # than showing nothing.
-    printf '%s' "$input" | "$CCSTATUSLINE" --config "$cfg"
+    printf '%s' "$input" | run_ccstatusline --config "$cfg"
   fi
 elif [ -n "$cfg" ] && [ -f "$cfg" ]; then
-  exec "$CCSTATUSLINE" --config "$cfg"
+  run_ccstatusline --config "$cfg"
 else
-  exec "$CCSTATUSLINE"
+  run_ccstatusline
 fi
