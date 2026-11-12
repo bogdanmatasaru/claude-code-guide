@@ -174,7 +174,8 @@ sys.exit(0 if fh.get("used_percentage") is None
 }
 
 # The consumer layout minus its 5h widgets, derived rather than shipped so it follows
-# whatever the consumer profile holds. A line left with only labels is dropped.
+# whatever the consumer profile holds, each 5h label with its widget. A line left
+# with only labels is dropped.
 write_weekly_profile() {
   "$PYTHON" -I -c 'import sys, json
 src, dst = sys.argv[1], sys.argv[2]
@@ -183,7 +184,10 @@ d = json.load(open(src))
 lines = []
 for line in d.get("lines", []):
     if any(w.get("type") in five for w in line):
-        line = [w for w in line if w.get("type") not in five]
+        # Each label sits before its widget, so it goes with it.
+        line = [w for i, w in enumerate(line) if w.get("type") not in five
+                and not (w.get("type") == "custom-text" and i + 1 < len(line)
+                         and line[i + 1].get("type") in five)]
         if all(w.get("type") == "custom-text" for w in line):
             continue
     lines.append(line)
